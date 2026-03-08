@@ -1,27 +1,34 @@
 import { motion } from "framer-motion";
 import { ReactNode } from "react";
+import {
+  createRevealTransition,
+  revealVariants,
+  type RevealDirection,
+} from "@/lib/motion";
 
 interface AnimatedSectionProps {
   children: ReactNode;
   className?: string;
   delay?: number;
-  direction?: "up" | "left" | "right" | "scale";
+  direction?: RevealDirection;
+  once?: boolean;
+  amount?: number;
 }
 
-const variants = {
-  up: { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0 } },
-  left: { hidden: { opacity: 0, x: -40 }, visible: { opacity: 1, x: 0 } },
-  right: { hidden: { opacity: 0, x: 40 }, visible: { opacity: 1, x: 0 } },
-  scale: { hidden: { opacity: 0, scale: 0.9 }, visible: { opacity: 1, scale: 1 } },
-};
-
-const AnimatedSection = ({ children, className = "", delay = 0, direction = "up" }: AnimatedSectionProps) => (
+const AnimatedSection = ({
+  children,
+  className = "",
+  delay = 0,
+  direction = "up",
+  once = true,
+  amount = 0.2,
+}: AnimatedSectionProps) => (
   <motion.div
     initial="hidden"
     whileInView="visible"
-    viewport={{ once: true, margin: "-50px" }}
-    transition={{ duration: 0.6, delay, ease: "easeOut" }}
-    variants={variants[direction]}
+    viewport={{ once, amount, margin: "-60px" }}
+    transition={createRevealTransition(delay)}
+    variants={revealVariants[direction]}
     className={className}
   >
     {children}
