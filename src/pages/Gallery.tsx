@@ -40,7 +40,7 @@ const galleryTileVariants = {
     rotateX: index % 2 === 0 ? 16 : -12,
     rotateY: index % 2 === 0 ? -10 : 10,
     scale: 0.86,
-    filter: "blur(14px)",
+    filter: "blur(4px)",
   }),
   visible: (index: number) => ({
     opacity: 1,
@@ -176,10 +176,10 @@ const Gallery = () => (
               <motion.div
                 aria-hidden
                 initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 0.28, scale: 1.05 }}
+                whileInView={{ opacity: 0.18, scale: 1.03 }}
                 viewport={{ once: true, margin: "-80px" }}
                 transition={{ duration: 0.8, delay: index * 0.05 }}
-                className="pointer-events-none absolute -bottom-16 -left-12 h-40 w-40 rounded-full bg-accent/30 blur-2xl"
+                className="pointer-events-none absolute -bottom-16 -left-12 h-40 w-40 rounded-full bg-accent/20 blur-xl"
               />
               <motion.div
                 aria-hidden
