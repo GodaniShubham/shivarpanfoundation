@@ -1,16 +1,20 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Heart } from "lucide-react";
+import { Heart, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import shivarpanLogo from "@/assets/shivarpan-logo.jpeg";
 
 const navLinks = [
   { to: "/", label: "Home" },
-  { to: "/about", label: "About Us" },
-  { to: "/causes", label: "Our Causes" },
-  { to: "/campaigns", label: "Campaigns" },
-  { to: "/blog", label: "Blog & Events" },
-  { to: "/contact", label: "Contact" },
+  { to: "/about", label: "About" },
+  { to: "/gallery", label: "Gallery" },
+  { to: "/news-stories", label: "Stories" },
+  { to: "/recent-projects", label: "Recent Projects" },
+  { to: "/awards", label: "Awards" },
+  { to: "/e-magazine-articles", label: "Magazines" },
+  { to: "/podcast", label: "Podcast" },
+  { to: "/contact", label: "Contact Us" },
 ];
 
 const Navbar = () => {
@@ -22,43 +26,41 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <Heart className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <span className="font-display text-xl font-bold text-foreground">Shivarpan</span>
-              <span className="block text-xs text-muted-foreground -mt-1">Charitable Foundation</span>
+          <Link to="/" className="group">
+            <div className="rounded-xl bg-card px-2 py-1 shadow-sm ring-1 ring-border/70 transition-all duration-300 group-hover:shadow-md group-hover:ring-primary/40">
+              <img
+                src={shivarpanLogo}
+                alt="Shivarpan Foundation logo"
+                className="h-10 sm:h-11 w-auto object-contain"
+              />
             </div>
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 relative group ${
-                  location.pathname === link.to
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {link.label}
-                {location.pathname === link.to && (
-                  <motion.div
-                    layoutId="navbar-indicator"
-                    className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full"
-                  />
-                )}
-              </Link>
-            ))}
-          </div>
-
-          {/* CTA */}
-          <div className="hidden lg:flex items-center gap-3">
-            <Link to="/campaigns">
-              <Button className="bg-accent text-accent-foreground hover:bg-accent/90 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5">
+          <div className="hidden xl:flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 relative group ${
+                    location.pathname === link.to
+                      ? "text-primary bg-primary/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {link.label}
+                  {location.pathname === link.to && (
+                    <motion.div
+                      layoutId="navbar-indicator"
+                      className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full"
+                    />
+                  )}
+                </Link>
+              ))}
+            </div>
+            <Link to="/donate-now">
+              <Button className="bg-accent text-accent-foreground hover:bg-accent/90 font-semibold shadow-sm">
                 <Heart className="w-4 h-4 mr-2" />
                 Donate Now
               </Button>
@@ -68,7 +70,7 @@ const Navbar = () => {
           {/* Mobile Toggle */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+            className="xl:hidden p-2 rounded-lg hover:bg-muted transition-colors"
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -82,7 +84,7 @@ const Navbar = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-card border-t border-border overflow-hidden"
+            className="xl:hidden bg-card border-t border-border overflow-hidden"
           >
             <div className="container mx-auto px-4 py-4 space-y-1">
               {navLinks.map((link, i) => (
@@ -105,8 +107,8 @@ const Navbar = () => {
                   </Link>
                 </motion.div>
               ))}
-              <Link to="/campaigns" onClick={() => setIsOpen(false)}>
-                <Button className="w-full mt-3 bg-accent text-accent-foreground">
+              <Link to="/donate-now" onClick={() => setIsOpen(false)} className="block pt-3">
+                <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
                   <Heart className="w-4 h-4 mr-2" />
                   Donate Now
                 </Button>
