@@ -294,15 +294,15 @@ const LoadingScreen = ({ onComplete }: LoadingScreenProps) => {
         })
         .to(canvas, {
           scale: 1.12,
-          duration: 0.55,
+          duration: 0.45,
           ease: "power2.inOut",
           transformOrigin: "50% 50%",
         })
         .to(root, {
           autoAlpha: 0,
-          duration: 0.65,
+          duration: 0.55,
           ease: "power2.out",
-        }, 0.15);
+        }, 0.1);
     };
 
     const textureLoader = new THREE.TextureLoader();
@@ -387,31 +387,31 @@ const LoadingScreen = ({ onComplete }: LoadingScreenProps) => {
         timeline
           .to(material.uniforms.uDitherProgress, {
             value: 1,
-            duration: 4.8,
+            duration: 1.9,
             ease: "linear",
           }, 0)
           .to(material.uniforms.uGridOffsetEnd, {
             value: 0.08,
-            duration: 4.8,
+            duration: 1.9,
             ease: "power2.out",
           }, 0)
           .to(cameraAnchor.rotation, {
             x: 0,
             y: 0,
             z: 0,
-            duration: 6,
+            duration: 2.2,
           }, 0)
           .to(camera, {
             zoom: 0.9,
-            duration: 6,
+            duration: 2.2,
             onUpdate: () => camera.updateProjectionMatrix(),
           }, 0)
           .to(cameraAnchor.position, {
             x: 0,
             y: 0,
-            duration: 2.6,
+            duration: 1.2,
             ease: "inOutCubic",
-          }, 3.4);
+          }, 0.9);
       } catch {
         onComplete();
       }
