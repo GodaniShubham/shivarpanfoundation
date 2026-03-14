@@ -1,0 +1,83 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block content %}
+  <div style="margin-bottom: 16px;">
+    <h1 style="margin: 0 0 8px 0;">Dashboard</h1>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 12px;">
+      <div class="module" style="padding: 12px;">
+        <h2 style="margin-top: 0;">Total Visitors</h2>
+        <div style="font-size: 28px; font-weight: 700;">{{ kpi_visitors_total }}</div>
+      </div>
+      <div class="module" style="padding: 12px;">
+        <h2 style="margin-top: 0;">Total Page Views</h2>
+        <div style="font-size: 28px; font-weight: 700;">{{ kpi_pageviews_total }}</div>
+      </div>
+      <div class="module" style="padding: 12px;">
+        <h2 style="margin-top: 0;">Pages</h2>
+        <div style="font-size: 28px; font-weight: 700;">{{ kpi_pages_total }}</div>
+      </div>
+      <div class="module" style="padding: 12px;">
+        <h2 style="margin-top: 0;">Articles</h2>
+        <div style="font-size: 28px; font-weight: 700;">{{ kpi_articles_total }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(320px, 1fr)); gap: 12px; margin-bottom: 12px;">
+    <div class="module" style="padding: 12px;">
+      <h2 style="margin-top: 0;">Contact Messages (New: {{ contacts_new_count }})</h2>
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th style="text-align:left;">Name</th>
+            <th style="text-align:left;">Email</th>
+            <th style="text-align:left;">Status</th>
+            <th style="text-align:left;">Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in recent_contacts %}
+            <tr>
+              <td>{{ m.name }}</td>
+              <td><a href="mailto:{{ m.email }}">{{ m.email }}</a></td>
+              <td>{{ m.get_status_display }}</td>
+              <td>{{ m.created_at }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4">No messages yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="module" style="padding: 12px;">
+      <h2 style="margin-top: 0;">Recent Activity (Page Views)</h2>
+      <table style="width: 100%;">
+        <thead>
+          <tr>
+            <th style="text-align:left;">Path</th>
+            <th style="text-align:left;">Visitor</th>
+            <th style="text-align:left;">Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in recent_pageviews %}
+            <tr>
+              <td>{{ v.path }}</td>
+              <td style="font-family: monospace; font-size: 12px;">{{ v.visitor.visitor_id }}</td>
+              <td>{{ v.created_at }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="3">No page views yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="content-main">
+    {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+  </div>
+{% endblock %}
+

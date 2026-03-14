@@ -1,0 +1,26 @@
+{% extends "public/base.html" %}
+
+{% block title %}{{ page.seo_title|default:page.title }}{% endblock %}
+{% block meta_description %}{{ page.seo_description|default:site_settings.default_meta_description }}{% endblock %}
+
+{% block meta_extra %}
+  {% if page.og_title %}<meta property="og:title" content="{{ page.og_title }}" />{% endif %}
+  {% if page.og_description %}<meta property="og:description" content="{{ page.og_description }}" />{% endif %}
+  {% if page.og_image and page.og_image.file %}<meta property="og:image" content="{{ page.og_image.file.url }}" />{% endif %}
+  {% if page.canonical_url %}<link rel="canonical" href="{{ page.canonical_url }}" />{% endif %}
+{% endblock %}
+
+{% block content %}
+  <main class="wrap">
+    <h1 style="margin: 14px 0 10px;">{{ page.title }}</h1>
+    {% if page.cover_image and page.cover_image.file %}
+      <img src="{{ page.cover_image.file.url }}" alt="{{ page.cover_image.alt_text|default:page.title }}" />
+      <div style="height: 10px;"></div>
+    {% endif %}
+    <div>{{ page.body|safe }}</div>
+    {% if page.embed_html %}
+      <div style="margin-top: 14px;">{{ page.embed_html|safe }}</div>
+    {% endif %}
+  </main>
+{% endblock %}
+
