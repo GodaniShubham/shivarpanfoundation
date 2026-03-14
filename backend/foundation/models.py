@@ -1,0 +1,341 @@
+from __future__ import annotations
+
+import uuid
+
+from django.db import models
+from django.utils import timezone
+
+
+class TimeStampedModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class ContentStatus(models.TextChoices):
+    DRAFT = "draft", "Draft"
+    PUBLISHED = "published", "Published"
+    ARCHIVED = "archived", "Archived"
+
+
+class PublishableQuerySet(models.QuerySet):
+    def published(self):
+        now = timezone.now()
+        return self.filter(status=ContentStatus.PUBLISHED, publish_at__lte=now)
+
+
+class PublishableModel(TimeStampedModel):
+    status = models.CharField(max_length=20, choices=ContentStatus.choices, default=ContentStatus.DRAFT)
+    publish_at = models.DateTimeField(default=timezone.now)
+
+    objects = PublishableQuerySet.as_manager()
+
+    class Meta:
+        abstract = True
+
+
+class MediaAsset(TimeStampedModel):
+    class MediaType(models.TextChoices):
+        IMAGE = "image", "Image"
+        VIDEO = "video", "Video"
+        PDF = "pdf", "PDF"
+        DOCUMENT = "document", "Document"
+        OTHER = "other", "Other"
+
+    title = models.CharField(max_length=255, blank=True)
+    file = models.FileField(upload_to="uploads/%Y/%m/")
+    alt_text = models.CharField(max_length=255, blank=True)
+    media_type = models.CharField(max_length=20, choices=MediaType.choices, default=MediaType.OTHER)
+
+    def __str__(self) -> str:
+        return self.title or self.file.name.rsplit("/", 1)[-1]
+
+    def save(self, *args, **kwargs):
+        if self.file and self.file.name:
+            name = self.file.name.lower()
+            if name.endswith((".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")):
+                self.media_type = self.MediaType.IMAGE
+            elif name.endswith((".mp4", ".mov", ".webm", ".mkv")):
+                self.media_type = self.MediaType.VIDEO
+            elif name.endswith(".pdf"):
+                self.media_type = self.MediaType.PDF
+            elif name.endswith((".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx")):
+                self.media_type = self.MediaType.DOCUMENT
+            else:
+                self.media_type = self.MediaType.OTHER
+        return super().save(*args, **kwargs)
+
+
+class SeoFields(models.Model):
+    seo_title = models.CharField(max_length=255, blank=True)
+    seo_description = models.TextField(blank=True)
+    canonical_url = models.URLField(blank=True)
+    og_title = models.CharField(max_length=255, blank=True)
+    og_description = models.TextField(blank=True)
+    og_image = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+
+    class Meta:
+        abstract = True
+
+
+class Page(PublishableModel, SeoFields):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+    body = models.TextField(blank=True)
+    cover_image = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="page_covers"
+    )
+    embed_html = models.TextField(blank=True, help_text="Optional: YouTube/embed code.")
+
+    show_in_nav = models.BooleanField(default=False)
+    menu_title = models.CharField(max_length=255, blank=True)
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class Category(TimeStampedModel):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=120, unique=True)
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class Tag(TimeStampedModel):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=120, unique=True)
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class Article(PublishableModel, SeoFields):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+    excerpt = models.TextField(blank=True)
+    body = models.TextField(blank=True)
+    author_name = models.CharField(max_length=255, blank=True)
+    featured_image = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="article_images"
+    )
+    categories = models.ManyToManyField(Category, blank=True, related_name="articles")
+    tags = models.ManyToManyField(Tag, blank=True, related_name="articles")
+    is_featured = models.BooleanField(default=False)
+
+    social_share_title = models.CharField(max_length=255, blank=True)
+    social_share_description = models.TextField(blank=True)
+    social_share_image = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="article_social_images"
+    )
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class MagazineIssue(PublishableModel, SeoFields):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+    description = models.TextField(blank=True)
+    cover_image = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="magazine_covers"
+    )
+    is_featured = models.BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class MagazineStory(PublishableModel, SeoFields):
+    issue = models.ForeignKey(MagazineIssue, on_delete=models.CASCADE, related_name="stories")
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+    excerpt = models.TextField(blank=True)
+    body = models.TextField(blank=True)
+    author_name = models.CharField(max_length=255, blank=True)
+    featured_image = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="magazine_story_images"
+    )
+    sort_order = models.PositiveIntegerField(default=0)
+    highlight_on_homepage = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["sort_order", "-publish_at"]
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class Testimonial(TimeStampedModel):
+    name = models.CharField(max_length=255)
+    designation = models.CharField(max_length=255, blank=True)
+    organization = models.CharField(max_length=255, blank=True)
+    quote = models.TextField()
+    photo = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="testimonial_photos"
+    )
+    is_approved = models.BooleanField(default=False)
+    is_hidden = models.BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.organization})" if self.organization else self.name
+
+
+class Project(PublishableModel, SeoFields):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+    summary = models.TextField(blank=True)
+    description = models.TextField(blank=True)
+    partner_organization = models.CharField(max_length=255, blank=True)
+    impact_numbers = models.JSONField(default=dict, blank=True)
+    featured_image = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="project_images"
+    )
+    gallery = models.ManyToManyField(MediaAsset, blank=True, related_name="project_galleries")
+    testimonial = models.ForeignKey(
+        Testimonial, null=True, blank=True, on_delete=models.SET_NULL, related_name="projects"
+    )
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class ContactSubmission(TimeStampedModel):
+    class Status(models.TextChoices):
+        NEW = "new", "New"
+        CONTACTED = "contacted", "Contacted"
+        CLOSED = "closed", "Closed"
+
+    name = models.CharField(max_length=255)
+    email = models.EmailField()
+    phone = models.CharField(max_length=50, blank=True)
+    company = models.CharField(max_length=255, blank=True)
+    subject = models.CharField(max_length=255, blank=True)
+    message = models.TextField()
+
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW)
+    notes = models.TextField(blank=True)
+    contacted_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self) -> str:
+        return f"{self.name} - {self.email}"
+
+
+class Subscriber(TimeStampedModel):
+    email = models.EmailField(unique=True)
+    name = models.CharField(max_length=255, blank=True)
+    source = models.CharField(max_length=255, blank=True)
+
+    def __str__(self) -> str:
+        return self.email
+
+
+class Homepage(TimeStampedModel):
+    id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
+
+    hero_title = models.CharField(max_length=255, blank=True)
+    hero_subtitle = models.TextField(blank=True)
+    hero_background_image = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="homepage_hero_images"
+    )
+    hero_cta_text = models.CharField(max_length=100, blank=True)
+    hero_cta_url = models.URLField(blank=True)
+
+    featured_article = models.ForeignKey(
+        Article, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    featured_page = models.ForeignKey(Page, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+
+    partner_logos = models.ManyToManyField(MediaAsset, blank=True, related_name="partner_logo_sets")
+    show_testimonials = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        return super().save(*args, **kwargs)
+
+    @classmethod
+    def get_solo(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self) -> str:
+        return "Homepage"
+
+
+class HomepageSection(TimeStampedModel):
+    homepage = models.ForeignKey(Homepage, on_delete=models.CASCADE, related_name="sections")
+    section_type = models.CharField(max_length=50, default="section")
+    title = models.CharField(max_length=255, blank=True)
+    body = models.TextField(blank=True)
+    image = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="homepage_section_images"
+    )
+    embed_html = models.TextField(blank=True)
+    button_text = models.CharField(max_length=100, blank=True)
+    button_url = models.URLField(blank=True)
+    sort_order = models.PositiveIntegerField(default=0)
+    is_enabled = models.BooleanField(default=True)
+    extra = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def __str__(self) -> str:
+        base = f"{self.section_type}"
+        if self.title:
+            base += f": {self.title}"
+        return base
+
+
+class SiteSettings(TimeStampedModel):
+    id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
+
+    default_meta_title = models.CharField(max_length=255, blank=True)
+    default_meta_description = models.TextField(blank=True)
+    google_analytics_id = models.CharField(max_length=50, blank=True)
+    google_search_console_verification = models.CharField(max_length=255, blank=True)
+    robots_txt = models.TextField(
+        blank=True,
+        default="User-agent: *\nDisallow:\n\nSitemap: /sitemap.xml\n",
+    )
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        return super().save(*args, **kwargs)
+
+    @classmethod
+    def get_solo(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self) -> str:
+        return "Site Settings"
+
+
+class Visitor(models.Model):
+    visitor_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    first_seen_at = models.DateTimeField(default=timezone.now)
+    last_seen_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self) -> str:
+        return str(self.visitor_id)
+
+
+class PageView(models.Model):
+    visitor = models.ForeignKey(Visitor, on_delete=models.CASCADE, related_name="pageviews")
+    path = models.CharField(max_length=255)
+    full_path = models.CharField(max_length=1024, blank=True)
+    referer = models.CharField(max_length=1024, blank=True)
+    user_agent = models.CharField(max_length=1024, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["-created_at"])]
+
+    def __str__(self) -> str:
+        return f"{self.path} ({self.created_at:%Y-%m-%d %H:%M})"
+

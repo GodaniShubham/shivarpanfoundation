@@ -1,0 +1,29 @@
+{% extends "public/base.html" %}
+
+{% block title %}Blog{% endblock %}
+
+{% block content %}
+  <main class="wrap">
+    <h1 style="margin: 14px 0 12px;">Blog</h1>
+    <div class="grid">
+      {% for a in articles %}
+        <article class="card">
+          {% if a.featured_image and a.featured_image.file %}
+            <a href="/blog/{{ a.slug }}/"><img src="{{ a.featured_image.file.url }}" alt="{{ a.featured_image.alt_text|default:a.title }}" /></a>
+            <div style="height: 10px;"></div>
+          {% endif %}
+          <h3 style="margin: 0 0 6px;"><a href="/blog/{{ a.slug }}/" style="text-decoration:none;">{{ a.title }}</a></h3>
+          <div class="muted" style="margin-bottom: 10px;">{{ a.publish_at }}</div>
+          {% if a.excerpt %}<div class="muted">{{ a.excerpt }}</div>{% endif %}
+          <div style="margin-top: 10px;">
+            {% for c in a.categories.all %}<span class="pill">{{ c.name }}</span>{% endfor %}
+            {% for t in a.tags.all %}<span class="pill">#{{ t.name }}</span>{% endfor %}
+          </div>
+        </article>
+      {% empty %}
+        <div class="card">No published articles yet.</div>
+      {% endfor %}
+    </div>
+  </main>
+{% endblock %}
+

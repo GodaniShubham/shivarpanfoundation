@@ -1,0 +1,24 @@
+{% extends "public/base.html" %}
+
+{% block title %}Magazine{% endblock %}
+
+{% block content %}
+  <main class="wrap">
+    <h1 style="margin: 14px 0 12px;">Magazine</h1>
+    <div class="grid">
+      {% for i in issues %}
+        <article class="card">
+          {% if i.cover_image and i.cover_image.file %}
+            <a href="/magazine/{{ i.slug }}/"><img src="{{ i.cover_image.file.url }}" alt="{{ i.cover_image.alt_text|default:i.title }}" /></a>
+            <div style="height: 10px;"></div>
+          {% endif %}
+          <h3 style="margin: 0 0 6px;"><a href="/magazine/{{ i.slug }}/" style="text-decoration:none;">{{ i.title }}</a></h3>
+          {% if i.description %}<div class="muted">{{ i.description|safe }}</div>{% endif %}
+        </article>
+      {% empty %}
+        <div class="card">No published issues yet.</div>
+      {% endfor %}
+    </div>
+  </main>
+{% endblock %}
+
