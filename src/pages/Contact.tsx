@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import AnimatedSection from "@/components/AnimatedSection";
 import { useToast } from "@/hooks/use-toast";
+import { postJson } from "@/lib/api";
 
 type ContactFormState = {
   name: string;
@@ -69,16 +70,43 @@ const responsePromises = [
 const Contact = () => {
   const { toast } = useToast();
   const [form, setForm] = useState<ContactFormState>(defaultForm);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    toast({
-      title: "Message sent successfully",
-      description: "Our team will contact you shortly with next steps.",
-    });
+    if (isSubmitting) {
+      return;
+    }
 
-    setForm(defaultForm);
+    setIsSubmitting(true);
+    try {
+      const subject = form.subject.trim() || form.topic;
+
+      await postJson("contact/", {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        company: form.organization.trim(),
+        subject: `${form.topic} — ${subject}`,
+        message: form.message.trim(),
+      });
+
+      toast({
+        title: "Message sent successfully",
+        description: "Our team will contact you shortly with next steps.",
+      });
+
+      setForm(defaultForm);
+    } catch (error) {
+      toast({
+        title: "Unable to send message",
+        description: error instanceof Error ? error.message : "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -281,9 +309,10 @@ const Contact = () => {
                   <Button
                     type="submit"
                     className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    disabled={isSubmitting}
                   >
                     <Send className="mr-2 h-4 w-4" />
-                    Submit Message
+                    {isSubmitting ? "Sending..." : "Submit Message"}
                   </Button>
                 </div>
               </motion.form>

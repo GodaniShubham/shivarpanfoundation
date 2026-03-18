@@ -14,6 +14,7 @@ from foundation.api import (
     ProjectViewSet,
     SubscriberCreateAPIView,
     TestimonialViewSet,
+    UpcomingEventViewSet,
 )
 
 
@@ -25,6 +26,7 @@ router.register(r"projects", ProjectViewSet, basename="project")
 router.register(r"testimonials", TestimonialViewSet, basename="testimonial")
 router.register(r"magazine/issues", MagazineIssueViewSet, basename="magazine-issue")
 router.register(r"magazine/stories", MagazineStoryViewSet, basename="magazine-story")
+router.register(r"upcoming-events", UpcomingEventViewSet, basename="upcoming-event")
 
 urlpatterns = [
     path("", include(router.urls)),
@@ -32,4 +34,3 @@ urlpatterns = [
     path("contact/", ContactSubmissionCreateAPIView.as_view(), name="contact-submit"),
     path("newsletter/subscribe/", SubscriberCreateAPIView.as_view(), name="newsletter-subscribe"),
 ]
-

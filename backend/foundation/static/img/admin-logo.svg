@@ -1,0 +1,24 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="shiv-gradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1f5f7a"/>
+      <stop offset="60%" stop-color="#1b5169"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="#0b2b3a"/>
+  <rect x="36" y="36" width="440" height="440" rx="100" fill="url(#shiv-gradient)"/>
+  <path
+    d="M162 170C162 145.7 181.7 126 206 126H306C330.3 126 350 145.7 350 170V198C350 215.7 339.7 231.6 324 239.1V342C324 372.4 299.4 397 269 397H243C212.6 397 188 372.4 188 342V239.1C172.3 231.6 162 215.7 162 198V170Z"
+    fill="#0b2b3a"
+    opacity="0.9"
+  />
+  <path
+    d="M220 209H292V332C292 347.5 279.5 360 264 360H248C232.5 360 220 347.5 220 332V209Z"
+    fill="#f6f6f2"
+  />
+  <path
+    d="M206 170C206 158.4 215.4 149 227 149H285C296.6 149 306 158.4 306 170V182H206V170Z"
+    fill="#f6f6f2"
+  />
+</svg>

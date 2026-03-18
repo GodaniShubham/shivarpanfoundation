@@ -13,6 +13,8 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret-key-change-me")
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "1") not in {"0", "false", "False"}
 
+TINYMCE_API_KEY = os.environ.get("TINYMCE_API_KEY", "")
+
 ALLOWED_HOSTS_ENV = os.environ.get("DJANGO_ALLOWED_HOSTS", "")
 if ALLOWED_HOSTS_ENV:
     ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS_ENV.split(",") if h.strip()]
@@ -23,6 +25,7 @@ else:
 # INSTALLED APPS
 # -------------------------------------------------
 INSTALLED_APPS = [
+    'jazzmin',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -39,6 +42,55 @@ INSTALLED_APPS = [
     # Local apps
     "foundation",
 ]
+
+# -------------------------------------------------
+# JAZZMIN (Django Admin Theme)
+# -------------------------------------------------
+JAZZMIN_SETTINGS = {
+    "site_title": "Shivarpan Foundation Admin",
+    "site_header": "Shivarpan Foundation",
+    "site_brand": "Shivarpan Foundation",
+    "welcome_sign": "Welcome",
+    "search_model": "auth.User",
+    "user_avatar": None,
+    # Bootswatch themes: https://bootswatch.com/ (Jazzmin supports multiple)
+    "theme": "lux",
+    "dark_mode_theme": "cyborg",
+    "show_ui_builder": True,
+    "navigation_expanded": True,
+    "related_modal_active": False,
+    "changeform_format": "horizontal_tabs",
+    # Optional branding assets (create these files if you want)
+    "site_logo": "img/admin-logo.svg",
+    "login_logo": "img/admin-logo.svg",
+    "site_icon": "img/favicon.svg",
+    "site_logo_classes": "brand-image",
+    "custom_css": ["admin/custom.css?v=20260316"],
+    "topmenu_links": [
+        {"name": "View Site", "url": "/", "new_window": True},
+    ],
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "foundation": "fas fa-hand-holding-heart",
+    },
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "theme": "lux",
+    "dark_mode_theme": "cyborg",
+    "navbar": "navbar-dark navbar-primary",
+    "navbar_fixed": True,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_flat_style": True,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "accent": "accent-primary",
+    "button_classes": "btn btn-primary",
+}
 
 # -------------------------------------------------
 # MIDDLEWARE
@@ -115,6 +167,7 @@ USE_TZ = True
 # -------------------------------------------------
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "foundation" / "static"]
 
 # -------------------------------------------------
 # MEDIA FILES (Images, uploads)
@@ -131,6 +184,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # DJANGO REST FRAMEWORK
 # -------------------------------------------------
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [],
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend"
     ],
@@ -157,4 +211,3 @@ CORS_ALLOW_CREDENTIALS = True
 # CSRF (for POST requests from frontend)
 # -------------------------------------------------
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
-

@@ -1,0 +1,17 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }} | Shivarpan Foundation{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'admin/custom.css' %}">
+{% endblock %}
+
+{% block branding %}
+  <h1 id="site-name">
+    <a href="{% url 'admin:index' %}">Shivarpan Foundation</a>
+  </h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

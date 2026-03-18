@@ -15,10 +15,12 @@ from foundation.models import (
     MagazineStory,
     MediaAsset,
     Page,
+    PageSection,
     Project,
     Subscriber,
     Tag,
     Testimonial,
+    UpcomingEvent,
 )
 
 
@@ -58,6 +60,7 @@ class TagSerializer(serializers.ModelSerializer):
 class PageSerializer(serializers.ModelSerializer):
     cover_image = MediaAssetSerializer(read_only=True)
     og_image = MediaAssetSerializer(read_only=True)
+    sections = serializers.SerializerMethodField()
 
     class Meta:
         model = Page
@@ -69,6 +72,7 @@ class PageSerializer(serializers.ModelSerializer):
             "embed_html",
             "publish_at",
             "cover_image",
+            "sections",
             "seo_title",
             "seo_description",
             "canonical_url",
@@ -78,6 +82,10 @@ class PageSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    def get_sections(self, obj):
+        sections = obj.sections.filter(is_enabled=True).select_related("image").order_by("sort_order", "id")
+        return PageSectionSerializer(sections, many=True, context=self.context).data
 
 
 class ArticleSerializer(serializers.ModelSerializer):
@@ -204,6 +212,50 @@ class HomepageSectionSerializer(serializers.ModelSerializer):
         ]
 
 
+class PageSectionSerializer(serializers.ModelSerializer):
+    image = MediaAssetSerializer(read_only=True)
+
+    class Meta:
+        model = PageSection
+        fields = [
+            "id",
+            "section_type",
+            "title",
+            "body",
+            "image",
+            "embed_html",
+            "button_text",
+            "button_url",
+            "sort_order",
+            "is_enabled",
+            "extra",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class UpcomingEventSerializer(serializers.ModelSerializer):
+    poster_image = MediaAssetSerializer(read_only=True)
+
+    class Meta:
+        model = UpcomingEvent
+        fields = [
+            "id",
+            "title",
+            "subtitle",
+            "description",
+            "date_label",
+            "location_label",
+            "poster_image",
+            "cta_text",
+            "cta_url",
+            "sort_order",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+
+
 class PublicPublishedOnlyMixin:
     def get_queryset(self):
         return super().get_queryset().published()
@@ -216,7 +268,7 @@ class MediaAssetViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class PageViewSet(PublicPublishedOnlyMixin, viewsets.ReadOnlyModelViewSet):
-    queryset = Page.objects.all().order_by("-publish_at")
+    queryset = Page.objects.all().order_by("-publish_at").prefetch_related("sections__image")
     serializer_class = PageSerializer
     filterset_fields = ["slug"]
 
@@ -226,6 +278,19 @@ class PageViewSet(PublicPublishedOnlyMixin, viewsets.ReadOnlyModelViewSet):
         if not obj:
             return Response({"detail": "Not found."}, status=404)
         return Response(self.get_serializer(obj).data)
+
+
+class UpcomingEventViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = UpcomingEvent.objects.all().order_by("sort_order", "-created_at")
+    serializer_class = UpcomingEventSerializer
+    filterset_fields = ["is_active"]
+
+    @action(detail=False, methods=["get"], url_path="active")
+    def active(self, request):
+        event = self.get_queryset().filter(is_active=True).first()
+        if not event:
+            return Response({})
+        return Response(self.get_serializer(event).data)
 
 
 class ArticleViewSet(PublicPublishedOnlyMixin, viewsets.ReadOnlyModelViewSet):

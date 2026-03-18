@@ -131,49 +131,91 @@ const CinematicImpactStory = () => {
               style={{ scale: stageScale }}
               className="relative lg:sticky lg:top-28"
             >
-              <div className="relative overflow-hidden rounded-[1.8rem] border border-primary-foreground/20 bg-primary-foreground/5 shadow-[0_40px_100px_-48px_rgba(0,0,0,0.85)] backdrop-blur-sm">
-                <div className="relative aspect-[3/4]">
-                  {storyBeats.map((beat, index) => {
-                    const isActive = index === activeIndex;
-                    return (
-                      <motion.img
-                        key={beat.id}
-                        src={beat.image}
-                        alt={beat.title}
-                        animate={{
-                          opacity: isActive ? 1 : 0,
-                          scale: isActive ? 1 : 1.08,
-                          filter: isActive ? "brightness(1)" : "brightness(0.75)",
-                        }}
-                        transition={{
-                          duration: motionTokens.duration.medium,
-                          ease: motionTokens.ease,
-                        }}
-                        className="absolute inset-0 h-full w-full object-cover"
-                      />
-                    );
-                  })}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/26 to-transparent" />
+              <div className="space-y-4">
+                <div className="relative overflow-hidden rounded-[1.8rem] border border-primary-foreground/20 bg-primary-foreground/5 shadow-[0_40px_100px_-48px_rgba(0,0,0,0.85)] backdrop-blur-sm">
+                  <div className="relative aspect-[3/4]">
+                    {storyBeats.map((beat, index) => {
+                      const isActive = index === activeIndex;
+                      return (
+                        <motion.img
+                          key={beat.id}
+                          src={beat.image}
+                          alt={beat.title}
+                          animate={{
+                            opacity: isActive ? 1 : 0,
+                            scale: isActive ? 1 : 1.08,
+                            filter: isActive ? "brightness(1)" : "brightness(0.75)",
+                          }}
+                          transition={{
+                            duration: motionTokens.duration.medium,
+                            ease: motionTokens.ease,
+                          }}
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
+                      );
+                    })}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/26 to-transparent" />
+                  </div>
+
+                  <motion.div
+                    style={{ opacity: glowOpacity }}
+                    className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-primary/45 to-transparent"
+                  />
+
+                  <div className="absolute inset-x-5 bottom-5 rounded-2xl border border-primary-foreground/20 bg-black/35 p-4 backdrop-blur-md">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-foreground/70">
+                      Active Story
+                    </p>
+                    <h3 className="mt-2 font-display text-2xl font-semibold leading-tight text-primary-foreground">
+                      {storyBeats[activeIndex].title}
+                    </h3>
+                    <p className="mt-2 text-xs leading-relaxed text-primary-foreground/75">
+                      {storyBeats[activeIndex].detail}
+                    </p>
+                    <p className="mt-3 inline-flex rounded-full border border-primary-foreground/30 bg-primary-foreground/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
+                      {storyBeats[activeIndex].metric}
+                    </p>
+                  </div>
                 </div>
 
-                <motion.div
-                  style={{ opacity: glowOpacity }}
-                  className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-primary/45 to-transparent"
-                />
+                <div className="rounded-[1.4rem] border border-primary-foreground/20 bg-primary-foreground/5 p-4 backdrop-blur-sm">
+                  <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">
+                    <span>Focus Areas</span>
+                    <span className="text-accent/80">Hover to preview</span>
+                  </div>
+                  <div className="mt-3 grid gap-2">
+                    {storyBeats.map((beat, index) => {
+                      const Icon = beat.icon;
+                      const isActive = index === activeIndex;
 
-                <div className="absolute inset-x-5 bottom-5 rounded-2xl border border-primary-foreground/20 bg-black/35 p-4 backdrop-blur-md">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary-foreground/70">
-                    Active Story
-                  </p>
-                  <h3 className="mt-2 font-display text-2xl font-semibold leading-tight text-primary-foreground">
-                    {storyBeats[activeIndex].title}
-                  </h3>
-                  <p className="mt-2 text-xs leading-relaxed text-primary-foreground/75">
-                    {storyBeats[activeIndex].detail}
-                  </p>
-                  <p className="mt-3 inline-flex rounded-full border border-primary-foreground/30 bg-primary-foreground/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
-                    {storyBeats[activeIndex].metric}
-                  </p>
+                      return (
+                        <button
+                          key={`${beat.id}-nav`}
+                          type="button"
+                          onMouseEnter={() => setActiveIndex(index)}
+                          onFocus={() => setActiveIndex(index)}
+                          className={`group flex w-full items-center gap-3 rounded-2xl border px-3 py-2 text-left transition-colors ${
+                            isActive
+                              ? "border-accent/60 bg-accent/15"
+                              : "border-primary-foreground/15 bg-primary-foreground/[0.03] hover:border-accent/40"
+                          }`}
+                        >
+                          <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary-foreground/20 bg-black/25 text-accent">
+                            <Icon className="h-4 w-4" />
+                          </span>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-primary-foreground">{beat.title}</p>
+                            <p className="text-xs text-primary-foreground/65">{beat.metric}</p>
+                          </div>
+                          <span
+                            className={`h-2 w-2 rounded-full ${
+                              isActive ? "bg-accent shadow-[0_0_10px_rgba(245,158,11,0.7)]" : "bg-primary-foreground/30"
+                            }`}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </motion.div>
