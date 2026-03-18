@@ -291,6 +291,52 @@ class HomepageSection(TimeStampedModel):
         return base
 
 
+class PageSection(TimeStampedModel):
+    page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name="sections")
+    section_type = models.CharField(max_length=50, default="section")
+    title = models.CharField(max_length=255, blank=True)
+    body = models.TextField(blank=True)
+    image = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="page_section_images"
+    )
+    embed_html = models.TextField(blank=True)
+    button_text = models.CharField(max_length=100, blank=True)
+    button_url = models.URLField(blank=True)
+    sort_order = models.PositiveIntegerField(default=0)
+    is_enabled = models.BooleanField(default=True)
+    extra = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def __str__(self) -> str:
+        base = f"{self.section_type}"
+        if self.title:
+            base += f": {self.title}"
+        return base
+
+
+class UpcomingEvent(TimeStampedModel):
+    title = models.CharField(max_length=255)
+    subtitle = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True)
+    date_label = models.CharField(max_length=120, blank=True)
+    location_label = models.CharField(max_length=180, blank=True)
+    poster_image = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="upcoming_event_posters"
+    )
+    cta_text = models.CharField(max_length=100, blank=True)
+    cta_url = models.URLField(blank=True)
+    sort_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["sort_order", "-created_at"]
+
+    def __str__(self) -> str:
+        return self.title
+
+
 class SiteSettings(TimeStampedModel):
     id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
 
@@ -338,4 +384,3 @@ class PageView(models.Model):
 
     def __str__(self) -> str:
         return f"{self.path} ({self.created_at:%Y-%m-%d %H:%M})"
-

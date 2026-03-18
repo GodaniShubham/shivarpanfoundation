@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 
 from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.http import HttpResponse
 from django.utils import timezone
@@ -19,23 +20,31 @@ from foundation.models import (
     MediaAsset,
     Page,
     PageView,
+    PageSection,
     Project,
     SiteSettings,
     Subscriber,
     Tag,
     Testimonial,
+    UpcomingEvent,
     Visitor,
 )
+
+
+TINYMCE_API_KEY = getattr(settings, "TINYMCE_API_KEY", "")
+TINYMCE_JS = []
+if TINYMCE_API_KEY:
+    TINYMCE_JS = [
+        f"https://cdn.tiny.cloud/1/{TINYMCE_API_KEY}/tinymce/6/tinymce.min.js",
+        "foundation/js/tinymce-init.js",
+    ]
 
 
 class RichTextAdminMixin:
     rich_text_fields: tuple[str, ...] = ("body",)
 
     class Media:
-        js = [
-            "https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js",
-            "foundation/js/tinymce-init.js",
-        ]
+        js = TINYMCE_JS
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -54,8 +63,28 @@ class MediaAssetAdmin(admin.ModelAdmin):
     search_fields = ("title", "file", "alt_text")
 
 
+class PageSectionInline(admin.StackedInline):
+    model = PageSection
+    extra = 0
+    fields = (
+        "sort_order",
+        "section_type",
+        "title",
+        "body",
+        "image",
+        "embed_html",
+        "button_text",
+        "button_url",
+        "is_enabled",
+        "extra",
+    )
+    ordering = ("sort_order", "id")
+    autocomplete_fields = ("image",)
+
+
 @admin.register(Page, site=admin_site)
 class PageAdmin(RichTextAdminMixin, admin.ModelAdmin):
+    inlines = [PageSectionInline]
     list_display = ("title", "slug", "status", "publish_at", "updated_at")
     list_filter = ("status", "show_in_nav")
     search_fields = ("title", "slug")
@@ -191,6 +220,22 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return not SiteSettings.objects.exists()
 
+
+@admin.register(PageSection, site=admin_site)
+class PageSectionAdmin(RichTextAdminMixin, admin.ModelAdmin):
+    list_display = ("section_type", "title", "page", "sort_order", "is_enabled", "updated_at")
+    list_filter = ("section_type", "is_enabled")
+    search_fields = ("title", "section_type", "body")
+    autocomplete_fields = ("page", "image")
+    rich_text_fields = ("body", "embed_html")
+
+
+@admin.register(UpcomingEvent, site=admin_site)
+class UpcomingEventAdmin(admin.ModelAdmin):
+    list_display = ("title", "date_label", "location_label", "is_active", "sort_order", "updated_at")
+    list_filter = ("is_active",)
+    search_fields = ("title", "subtitle", "description", "date_label", "location_label")
+    autocomplete_fields = ("poster_image",)
 
 @admin.register(ContactSubmission, site=admin_site)
 class ContactSubmissionAdmin(admin.ModelAdmin):

@@ -2343,3 +2343,61 @@ body.magazine-reader-open {
   left: 0;
   background: linear-gradient(to right, rgba(0, 0, 0, 0.11), rgba(0, 0, 0, 0));
 }
+
+.dynamic-content h2,
+.dynamic-content h3,
+.dynamic-content h4 {
+  color: hsl(var(--foreground));
+  font-family: "Playfair Display", serif;
+  margin-top: 1.4rem;
+}
+
+.dynamic-content h2 {
+  font-size: 1.6rem;
+}
+
+.dynamic-content h3 {
+  font-size: 1.35rem;
+}
+
+.dynamic-content p {
+  margin-top: 0.75rem;
+}
+
+.dynamic-content ul,
+.dynamic-content ol {
+  margin-top: 0.85rem;
+  padding-left: 1.4rem;
+}
+
+.dynamic-content li {
+  margin-top: 0.4rem;
+}
+
+.dynamic-content a {
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+
+.dynamic-content a:hover {
+  color: hsl(var(--accent));
+}
+
+@keyframes partner-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@layer utilities {
+  .partner-marquee {
+    animation: partner-marquee 28s linear infinite;
+  }
+
+  .partners-marquee:hover .partner-marquee {
+    animation-play-state: paused;
+  }
+}

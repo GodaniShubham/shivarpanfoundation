@@ -7,7 +7,9 @@ import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import LoadingScreen from "./components/LoadingScreen";
+import UpcomingEventPopup from "./components/UpcomingEventPopup";
 import Index from "./pages/Index";
+import DynamicPage from "./pages/DynamicPage";
 import About from "./pages/About";
 import Gallery from "./pages/Gallery";
 import NewsStories from "./pages/NewsStories";
@@ -17,11 +19,13 @@ import Podcast from "./pages/Podcast";
 import PodcastEpisode from "./pages/PodcastEpisode";
 import Contact from "./pages/Contact";
 import DonateNow from "./pages/DonateNow";
+import UpcomingEvents from "./pages/UpcomingEvents";
 import EMagazineArticles from "./pages/EMagazineArticles";
 import MagazineViewer from "./pages/MagazineViewer";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
+import AdminPanel from "./pages/AdminPanel";
 
 const queryClient = new QueryClient();
 
@@ -39,19 +43,22 @@ const AppRoutes = () => {
       <main className={isMagazineViewer ? "pt-0" : "pt-20"}>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/gallery" element={<Gallery />} />
-          <Route path="/news-stories" element={<NewsStories />} />
-          <Route path="/recent-projects" element={<RecentProjects />} />
-          <Route path="/awards" element={<Awards />} />
-          <Route path="/podcast" element={<Podcast />} />
+          <Route path="/about" element={<DynamicPage slug="about" fallback={<About />} />} />
+          <Route path="/gallery" element={<DynamicPage slug="gallery" fallback={<Gallery />} />} />
+          <Route path="/news-stories" element={<DynamicPage slug="news-stories" fallback={<NewsStories />} />} />
+          <Route path="/recent-projects" element={<DynamicPage slug="recent-projects" fallback={<RecentProjects />} />} />
+          <Route path="/awards" element={<DynamicPage slug="awards" fallback={<Awards />} />} />
+          <Route path="/podcast" element={<DynamicPage slug="podcast" fallback={<Podcast />} />} />
           <Route path="/podcast/:episodeSlug" element={<PodcastEpisode />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/donate-now" element={<DonateNow />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-          <Route path="/e-magazine-articles" element={<EMagazineArticles />} />
+          <Route path="/contact" element={<DynamicPage slug="contact" fallback={<Contact />} />} />
+          <Route path="/donate-now" element={<DynamicPage slug="donate-now" fallback={<DonateNow />} />} />
+          <Route path="/upcoming-events" element={<DynamicPage slug="upcoming-events" fallback={<UpcomingEvents />} />} />
+          <Route path="/privacy-policy" element={<DynamicPage slug="privacy-policy" fallback={<PrivacyPolicy />} />} />
+          <Route path="/terms-and-conditions" element={<DynamicPage slug="terms-and-conditions" fallback={<TermsAndConditions />} />} />
+          <Route path="/e-magazine-articles" element={<DynamicPage slug="e-magazine-articles" fallback={<EMagazineArticles />} />} />
           <Route path="/e-magazine-articles/:magazineId" element={<MagazineViewer />} />
+          <Route path="/admin-panel" element={<AdminPanel />} />
+          <Route path="/:slug" element={<DynamicPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
@@ -72,6 +79,7 @@ const App = () => {
           <LoadingScreen onComplete={() => setShowLoader(false)} />
         ) : (
           <BrowserRouter>
+            <UpcomingEventPopup />
             <AppRoutes />
           </BrowserRouter>
         )}

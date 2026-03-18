@@ -7,6 +7,7 @@ import {
   Twitter,
   Instagram,
   Youtube,
+  Linkedin,
 } from "lucide-react";
 import shivarpanLogo from "@/assets/shivarpan-logo.jpeg";
 import { aboutContent } from "@/data/siteContent";
@@ -28,10 +29,17 @@ const Footer = () => {
               {aboutContent.footerSummary}
             </p>
             <div className="mt-6 flex gap-3">
-              {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => (
+              {[
+                { Icon: Facebook, link: "https://www.facebook.com/share/17EXvAn2U2/" },
+                { Icon: Instagram, link: "https://www.instagram.com/shivarpan_foundation?igsh=bXc0NDY3dXl0bWM1" },
+                { Icon: Linkedin, link: "https://www.linkedin.com/company/shivarpan-foundation/" },
+                { Icon: Youtube, link: "https://youtu.be/HeUBBLW01Ms?si=wcvxeT97VEEgc6RI" },
+              ].map(({ Icon, link }, i) => (
                 <a
                   key={i}
-                  href="#"
+                  href={link}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/10 transition-all duration-300 hover:-translate-y-1 hover:bg-primary hover:text-primary-foreground"
                 >
                   <Icon className="h-4 w-4" />

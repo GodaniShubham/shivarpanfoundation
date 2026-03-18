@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   Award,
@@ -15,6 +16,7 @@ import {
   Mic,
   Play,
   Sparkles,
+  Star,
   TreePine,
   Users,
 } from "lucide-react";
@@ -29,6 +31,7 @@ import campaignEducation from "@/assets/campaign-education.jpg";
 import campaignHealth from "@/assets/campaign-health.jpg";
 import campaignEnvironment from "@/assets/campaign-environment.jpg";
 import { aboutContent, homeHeroContent } from "@/data/siteContent";
+import { getJson } from "@/lib/api";
 
 const heroStats = [
   { value: "500+", label: "Lives Transformed" },
@@ -161,6 +164,75 @@ const episodes = [
   { title: "Inside a Rural Health Camp", duration: "24 min", host: "Host: Dr. Anita Desai" },
 ];
 
+const partners = [
+  { name: "Sahyog CSR Collective", focus: "CSR Partner", tag: "Corporate Impact", monogram: "SC", glow: "from-primary/20 via-primary/5 to-transparent" },
+  { name: "Aarambh Education Trust", focus: "Education Partner", tag: "Scholarships", monogram: "AE", glow: "from-accent/20 via-accent/5 to-transparent" },
+  { name: "Nirmal Health Network", focus: "Healthcare Partner", tag: "Medical Camps", monogram: "NH", glow: "from-primary/20 via-accent/10 to-transparent" },
+  { name: "GreenRoots Alliance", focus: "Environment Partner", tag: "Sustainability", monogram: "GR", glow: "from-accent/20 via-primary/10 to-transparent" },
+  { name: "Udaan Youth Council", focus: "Volunteer Network", tag: "Community", monogram: "UY", glow: "from-primary/15 via-accent/10 to-transparent" },
+  { name: "Sankalp Food Bank", focus: "Relief Partner", tag: "Food Security", monogram: "SF", glow: "from-accent/20 via-primary/10 to-transparent" },
+  { name: "Seva Digital Lab", focus: "Tech Partner", tag: "Digital Access", monogram: "SD", glow: "from-primary/20 via-accent/10 to-transparent" },
+  { name: "Rural Care Circle", focus: "Outreach Partner", tag: "Field Delivery", monogram: "RC", glow: "from-accent/20 via-primary/10 to-transparent" },
+];
+
+const partnerRowOne = [...partners, ...partners];
+
+const testimonials = [
+  {
+    quote:
+      "Shivarpan Foundation ki execution speed aur transparency ne humein trust diya. Ground teams ne real-time updates diye, jisse CSR delivery smooth rahi.",
+    name: "Meera Kulkarni",
+    role: "CSR Lead, Sahyog CSR Collective",
+    tag: "CSR Partner",
+    monogram: "MK",
+    glow: "from-accent/20 via-primary/10 to-transparent",
+  },
+  {
+    quote:
+      "Volunteer coordination itni strong thi ki outreach targets time se pehle achieve ho gaye. Community impact ka difference clearly dikhta hai.",
+    name: "Ankit Rao",
+    role: "Volunteer Coordinator, Udaan Youth Council",
+    tag: "Volunteer Network",
+    monogram: "AR",
+    glow: "from-primary/20 via-accent/10 to-transparent",
+  },
+  {
+    quote:
+      "Education kit drive me last-mile delivery aur beneficiary tracking top-class tha. Team ka commitment outstanding hai.",
+    name: "Ritu Sharma",
+    role: "Program Manager, Aarambh Education Trust",
+    tag: "Education Partner",
+    monogram: "RS",
+    glow: "from-accent/20 via-primary/10 to-transparent",
+  },
+];
+
+type MediaAsset = {
+  id: number;
+  title: string;
+  alt_text: string;
+  url: string;
+};
+
+type HomepagePayload = {
+  hero_title: string;
+  hero_subtitle: string;
+  hero_background_image: MediaAsset | null;
+  hero_cta_text: string;
+  hero_cta_url: string;
+  partner_logos: MediaAsset[];
+  show_testimonials: boolean;
+};
+
+type TestimonialPayload = {
+  id: number;
+  name: string;
+  designation: string;
+  organization: string;
+  quote: string;
+  photo: MediaAsset | null;
+};
+
 const quickAccessLinks = [
   {
     title: "Our Mission",
@@ -201,6 +273,8 @@ const darkSectionTagClass =
 const darkSectionTitleClass = "mt-3 font-display text-2xl font-bold text-primary-foreground sm:text-3xl md:text-4xl";
 
 const Index = () => {
+  const [homepage, setHomepage] = useState<HomepagePayload | null>(null);
+  const [testimonialItems, setTestimonialItems] = useState<TestimonialPayload[]>([]);
   const totalRaised = projects.reduce((sum, project) => sum + project.raised, 0);
   const totalGoal = projects.reduce((sum, project) => sum + project.goal, 0);
   const completionRate = totalGoal === 0 ? 0 : Math.round((totalRaised / totalGoal) * 100);
@@ -208,12 +282,108 @@ const Index = () => {
   const featuredProject = projects[0];
   const featuredProgress = Math.min((featuredProject.raised / featuredProject.goal) * 100, 100);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadHomepage = async () => {
+      try {
+        const data = await getJson<HomepagePayload>("homepage/");
+        if (isMounted) {
+          setHomepage(data);
+        }
+      } catch (error) {
+        console.error("Homepage API error", error);
+      }
+    };
+
+    const loadTestimonials = async () => {
+      try {
+        const data = await getJson<TestimonialPayload[]>("testimonials/");
+        if (isMounted) {
+          setTestimonialItems(data);
+        }
+      } catch (error) {
+        console.error("Testimonials API error", error);
+      }
+    };
+
+    loadHomepage();
+    loadTestimonials();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const heroTitle = homepage?.hero_title?.trim() || homeHeroContent.title;
+  const heroDescription = homepage?.hero_subtitle?.trim() || homeHeroContent.description;
+  const heroCtaText = homepage?.hero_cta_text?.trim() || "Donate or Partner";
+  const heroCtaUrl = homepage?.hero_cta_url?.trim() || "/contact";
+  const heroImageSrc = homepage?.hero_background_image?.url || heroImage;
+
+  const partnerCards = useMemo(() => {
+    if (homepage?.partner_logos?.length) {
+      return homepage.partner_logos.map((logo, index) => {
+        const initials =
+          logo.title
+            ?.split(" ")
+            .map((word) => word[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase() || "SP";
+
+        return {
+          name: logo.title || "Partner Organization",
+          focus: logo.alt_text || "Mission Partner",
+          tag: "Partner",
+          monogram: initials,
+          glow: index % 2 === 0 ? "from-primary/20 via-primary/5 to-transparent" : "from-accent/20 via-accent/5 to-transparent",
+          logoUrl: logo.url,
+        };
+      });
+    }
+
+    return partners;
+  }, [homepage]);
+
+  const partnerRow = [...partnerCards, ...partnerCards];
+
+  const testimonialsToShow = useMemo(() => {
+    if (homepage && homepage.show_testimonials === false) {
+      return [];
+    }
+
+    if (testimonialItems.length) {
+      return testimonialItems.map((item, index) => {
+        const initials =
+          item.name
+            ?.split(" ")
+            .map((word) => word[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase() || "SP";
+
+        return {
+          quote: item.quote,
+          name: item.name,
+          role: [item.designation, item.organization].filter(Boolean).join(", "),
+          tag: item.organization || "Partner",
+          monogram: initials,
+          glow: index % 2 === 0 ? "from-accent/20 via-primary/10 to-transparent" : "from-primary/20 via-accent/10 to-transparent",
+          photoUrl: item.photo?.url,
+        };
+      });
+    }
+
+    return testimonials;
+  }, [homepage, testimonialItems]);
+
   return (
     <div className="overflow-hidden">
       {/* Hero */}
       <section className="relative min-h-[92svh] md:min-h-screen flex items-center overflow-hidden">
         <img
-          src={heroImage}
+          src={heroImageSrc}
           alt="Shivarpan Foundation"
           loading="eager"
           fetchPriority="high"
@@ -263,7 +433,7 @@ const Index = () => {
               transition={{ duration: 0.8, delay: 0.15 }}
               className="mb-6 text-center font-display text-4xl font-bold leading-tight text-primary-foreground sm:text-5xl md:text-6xl lg:text-left lg:text-7xl"
             >
-              {homeHeroContent.title}
+              {heroTitle}
             </motion.h1>
 
             <motion.p
@@ -272,7 +442,7 @@ const Index = () => {
               transition={{ duration: 0.8, delay: 0.3 }}
               className="mx-auto mb-8 max-w-4xl text-center text-base leading-relaxed text-primary-foreground/85 sm:text-lg lg:mx-0 lg:text-left"
             >
-              {homeHeroContent.description}
+              {heroDescription}
             </motion.p>
 
             <motion.div
@@ -313,10 +483,10 @@ const Index = () => {
               transition={{ duration: 0.8, delay: 0.6 }}
               className="mt-7 flex flex-wrap justify-center gap-3 lg:justify-start"
             >
-              <Link to="/contact">
+              <Link to={heroCtaUrl}>
                 <Button className="group bg-accent text-accent-foreground transition-all duration-300 hover:-translate-y-0.5 hover:bg-accent/90 hover:shadow-lg hover:shadow-accent/25">
                   <Heart className="mr-2 h-4 w-4" />
-                  Donate or Partner
+                  {heroCtaText}
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </Button>
               </Link>
@@ -648,6 +818,143 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Partners */}
+      <section className="relative overflow-hidden border-y border-border/70 py-16 md:py-20">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,hsl(var(--primary)/0.08),transparent_40%),radial-gradient(circle_at_90%_70%,hsl(var(--accent)/0.1),transparent_44%)]" />
+        <div className="container relative z-10 mx-auto px-4">
+          <AnimatedSection className="mb-8 md:mb-10">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div className="max-w-2xl">
+                <span className={sectionTagClass}>
+                  <Handshake className="h-3.5 w-3.5" />
+                  Our Partners
+                </span>
+                <h2 className={sectionTitleClass}>Trust Built Through Shared Missions</h2>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                  CSR teams, community groups, and mission-aligned organizations power every project we deliver.
+                </p>
+              </div>
+              <Link to="/contact">
+                <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                  Become a Partner
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </AnimatedSection>
+
+          <div className="partners-marquee">
+            <div className="relative overflow-hidden rounded-[2rem] border border-border/80 bg-card/70 p-4 sm:p-6 backdrop-blur-sm shadow-[0_30px_90px_-60px_hsl(var(--foreground))]">
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-background via-background/90 to-transparent" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background via-background/90 to-transparent" />
+              <div className="partner-marquee flex w-max items-center gap-4 sm:gap-5">
+                {partnerRow.map((partner, index) => (
+                  <motion.div
+                    key={`${partner.name}-${index}`}
+                    whileHover={{ y: -4 }}
+                    className="group relative min-w-[230px] rounded-2xl border border-border/80 bg-card/90 p-4 shadow-sm backdrop-blur-sm transition-shadow hover:shadow-lg sm:min-w-[260px]"
+                  >
+                    <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${partner.glow} opacity-0 transition-opacity duration-500 group-hover:opacity-100`} />
+                    <div className="relative flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-primary/20 bg-primary/10 text-sm font-semibold text-primary shadow-[0_12px_26px_-18px_hsl(var(--primary))]">
+                        {"logoUrl" in partner && partner.logoUrl ? (
+                          <img src={partner.logoUrl} alt={partner.name} className="h-full w-full object-contain p-1" />
+                        ) : (
+                          partner.monogram
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{partner.name}</p>
+                        <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{partner.focus}</p>
+                      </div>
+                    </div>
+                    <div className="relative mt-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+                      <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                      {partner.tag}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {testimonialsToShow.length > 0 ? (
+        <section className="relative overflow-hidden py-16 md:py-24">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,hsl(var(--accent)/0.12),transparent_40%),radial-gradient(circle_at_86%_78%,hsl(var(--primary)/0.1),transparent_42%)]" />
+          <motion.div
+            aria-hidden
+            animate={{ x: [0, 16, 0], y: [0, -10, 0], opacity: [0.12, 0.28, 0.12] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+            className="pointer-events-none absolute -top-20 right-10 h-64 w-64 rounded-full bg-accent/20 blur-3xl"
+          />
+          <motion.div
+            aria-hidden
+            animate={{ x: [0, -16, 0], y: [0, 12, 0], opacity: [0.12, 0.24, 0.12] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+            className="pointer-events-none absolute -bottom-20 left-10 h-64 w-64 rounded-full bg-primary/20 blur-3xl"
+          />
+
+          <div className="container relative z-10 mx-auto px-4">
+            <AnimatedSection className="mb-10 md:mb-12">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div className="max-w-2xl">
+                  <span className={sectionTagClass}>
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Testimonials
+                  </span>
+                  <h2 className={sectionTitleClass}>Voices That Trust Our Work</h2>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                    Partner leaders aur volunteers ka feedback jo ground impact ko reflect karta hai.
+                  </p>
+                </div>
+                <div className="rounded-full border border-border/80 bg-card/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+                  4.9/5 Partner Rating
+                </div>
+              </div>
+            </AnimatedSection>
+
+            <div className="grid gap-5 lg:grid-cols-3">
+              {testimonialsToShow.map((item, index) => (
+                <AnimatedSection key={`${item.name}-${index}`} delay={index * 0.08}>
+                  <motion.div
+                    whileHover={{ y: -6 }}
+                    className="group relative h-full overflow-hidden rounded-3xl border border-border/80 bg-card/90 p-6 shadow-[0_28px_70px_-55px_hsl(var(--foreground))] backdrop-blur-sm"
+                  >
+                    <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${item.glow} opacity-0 transition-opacity duration-500 group-hover:opacity-100`} />
+                    <div className="relative flex items-center gap-1 text-accent">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} className="h-4 w-4 fill-current" />
+                      ))}
+                    </div>
+                    <p className="relative mt-4 text-sm leading-relaxed text-foreground/90 sm:text-base">
+                      “{item.quote}”
+                    </p>
+                    <div className="relative mt-6 flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-primary/20 bg-primary/10 text-sm font-semibold text-primary">
+                        {"photoUrl" in item && item.photoUrl ? (
+                          <img src={item.photoUrl} alt={item.name} className="h-full w-full object-cover" />
+                        ) : (
+                          item.monogram
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{item.name}</p>
+                        <p className="text-xs text-muted-foreground">{item.role}</p>
+                      </div>
+                      <span className="ml-auto inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+                        {item.tag}
+                      </span>
+                    </div>
+                  </motion.div>
+                </AnimatedSection>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {/* Recent Projects */}
       <section className="relative overflow-hidden py-16 md:py-24">

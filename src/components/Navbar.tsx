@@ -59,6 +59,11 @@ const Navbar = () => {
                 </Link>
               ))}
             </div>
+            <Link to="/upcoming-events">
+              <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold">
+                Upcoming Events
+              </Button>
+            </Link>
             <Link to="/donate-now">
               <Button className="bg-accent text-accent-foreground hover:bg-accent/90 font-semibold shadow-sm">
                 <Heart className="w-4 h-4 mr-2" />
@@ -107,6 +112,11 @@ const Navbar = () => {
                   </Link>
                 </motion.div>
               ))}
+              <Link to="/upcoming-events" onClick={() => setIsOpen(false)} className="block pt-3">
+                <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                  Upcoming Events
+                </Button>
+              </Link>
               <Link to="/donate-now" onClick={() => setIsOpen(false)} className="block pt-3">
                 <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
                   <Heart className="w-4 h-4 mr-2" />
