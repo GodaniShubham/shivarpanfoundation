@@ -31,6 +31,24 @@ type StoryBeat = {
   icon: LucideIcon;
 };
 
+const impactPulse = [
+  {
+    label: "Active Volunteers",
+    value: "3,000+",
+    detail: "Across 12 districts",
+  },
+  {
+    label: "Camps This Month",
+    value: "12",
+    detail: "Health + education mix",
+  },
+  {
+    label: "Kits In Transit",
+    value: "4,500",
+    detail: "School + nutrition kits",
+  },
+];
+
 const storyBeats: StoryBeat[] = [
   {
     id: "education",
@@ -215,6 +233,47 @@ const CinematicImpactStory = () => {
                         </button>
                       );
                     })}
+                  </div>
+                </div>
+
+                <div className="rounded-[1.4rem] border border-primary-foreground/20 bg-primary-foreground/5 p-4 backdrop-blur-sm">
+                  <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">
+                    <span>Live Pulse</span>
+                    <span className="text-accent/80">Updated weekly</span>
+                  </div>
+
+                  <div className="mt-4 grid gap-3">
+                    {impactPulse.map((item) => (
+                      <div
+                        key={item.label}
+                        className="flex items-center justify-between rounded-2xl border border-primary-foreground/15 bg-black/25 px-3 py-3"
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-primary-foreground">
+                            {item.label}
+                          </p>
+                          <p className="text-xs text-primary-foreground/60">
+                            {item.detail}
+                          </p>
+                        </div>
+                        <p className="text-lg font-semibold text-primary-foreground">
+                          {item.value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 rounded-2xl border border-primary-foreground/15 bg-black/20 px-3 py-3">
+                    <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.2em] text-primary-foreground/70">
+                      <span>Quarter Progress</span>
+                      <span className="text-accent">72%</span>
+                    </div>
+                    <div className="mt-2 h-2 w-full rounded-full bg-primary-foreground/10">
+                      <div className="h-full w-[72%] rounded-full bg-accent shadow-[0_0_18px_rgba(245,158,11,0.45)]" />
+                    </div>
+                    <p className="mt-2 text-xs text-primary-foreground/60">
+                      72% of quarterly targets completed
+                    </p>
                   </div>
                 </div>
               </div>
