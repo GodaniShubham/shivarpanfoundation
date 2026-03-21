@@ -732,29 +732,33 @@ const Index = () => {
           </AnimatedSection>
 
           <div className="grid md:grid-cols-12 gap-4">
-            <motion.div
-              whileHover={{ y: -6 }}
-              className="md:col-span-5 rounded-2xl overflow-hidden border border-border h-60 sm:h-72 md:h-[430px] group relative"
-            >
-              <img src={galleryShots[0].image} alt={galleryShots[0].title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
-              <p className="absolute bottom-3 left-3 text-primary-foreground font-semibold">{galleryShots[0].title}</p>
-            </motion.div>
+            <Link to="/gallery" className="block md:col-span-5">
+              <motion.div
+                whileHover={{ y: -6 }}
+                className="rounded-2xl overflow-hidden border border-border h-60 sm:h-72 md:h-[430px] group relative"
+              >
+                <img
+                  src={galleryShots[0].image}
+                  alt={galleryShots[0].title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+              </motion.div>
+            </Link>
 
             <div className="md:col-span-7 grid sm:grid-cols-2 gap-4">
               {galleryShots.slice(1).map((shot) => (
-                <motion.div
-                  key={shot.title}
-                  whileHover={{ y: -6 }}
-                  className="rounded-2xl overflow-hidden border border-border h-48 sm:h-52 md:h-[206px] group relative"
-                >
-                  <img src={shot.image} alt={shot.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
-                  <div className="absolute top-3 left-3 text-[10px] uppercase tracking-widest bg-primary-foreground/20 backdrop-blur-sm text-primary-foreground px-2 py-1 rounded-full">
-                    {shot.tag}
-                  </div>
-                  <p className="absolute bottom-3 left-3 text-primary-foreground text-sm font-semibold">{shot.title}</p>
-                </motion.div>
+                <Link key={shot.title} to="/gallery" className="block">
+                  <motion.div
+                    whileHover={{ y: -6 }}
+                    className="rounded-2xl overflow-hidden border border-border h-48 sm:h-52 md:h-[206px] group relative"
+                  >
+                    <img
+                      src={shot.image}
+                      alt={shot.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                  </motion.div>
+                </Link>
               ))}
             </div>
           </div>
