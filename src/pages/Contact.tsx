@@ -41,12 +41,12 @@ const defaultForm: ContactFormState = {
 const contactChannels = [
   {
     title: "Address",
-    value: "Mumbai, Maharashtra, India 400001",
+    value: "F.F, 104-D, 100 Feet Rd, nr. Sachin Tower, Satellite, ANANDNAGAR, Jodhpur Village, Ahmedabad, Gujarat 380015.",
     icon: <MapPin className="h-5 w-5" />,
   },
   {
     title: "Phone",
-    value: "+91 98765 43210",
+    value: "+91 98980 38241",
     icon: <Phone className="h-5 w-5" />,
   },
   {
@@ -155,11 +155,11 @@ const Contact = () => {
                 </h2>
                 <div className="mt-5 space-y-3">
                   <a
-                    href="tel:+919876543210"
+                    href="tel:+919898038241"
                     className="flex items-center gap-3 rounded-xl border border-border bg-background/70 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:border-primary/45"
                   >
                     <Phone className="h-4 w-4 text-primary" />
-                    +91 98765 43210
+                    +91 98980 38241
                   </a>
                   <a
                     href="mailto:info@shivarpanfoundation.org"
@@ -334,7 +334,7 @@ const Contact = () => {
                     Foundation Office
                   </h3>
                   <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                    Mumbai, Maharashtra, India 400001
+                    F.F, 104-D, 100 Feet Rd, nr. Sachin Tower, Satellite, ANANDNAGAR, Jodhpur Village, Ahmedabad, Gujarat 380015.
                   </p>
                   <div className="mt-5 flex flex-col gap-2.5 text-sm">
                     <p className="flex items-center gap-2 text-muted-foreground">

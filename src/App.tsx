@@ -22,6 +22,8 @@ import DonateNow from "./pages/DonateNow";
 import UpcomingEvents from "./pages/UpcomingEvents";
 import EMagazineArticles from "./pages/EMagazineArticles";
 import MagazineViewer from "./pages/MagazineViewer";
+import BoardOfTrustees from "./pages/BoardOfTrustees";
+import TeamMembers from "./pages/TeamMembers";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
@@ -55,6 +57,8 @@ const AppRoutes = () => {
           <Route path="/upcoming-events" element={<DynamicPage slug="upcoming-events" fallback={<UpcomingEvents />} />} />
           <Route path="/privacy-policy" element={<DynamicPage slug="privacy-policy" fallback={<PrivacyPolicy />} />} />
           <Route path="/terms-and-conditions" element={<DynamicPage slug="terms-and-conditions" fallback={<TermsAndConditions />} />} />
+          <Route path="/board-of-trustees" element={<BoardOfTrustees />} />
+          <Route path="/team-members" element={<TeamMembers />} />
           <Route path="/e-magazine-articles" element={<DynamicPage slug="e-magazine-articles" fallback={<EMagazineArticles />} />} />
           <Route path="/e-magazine-articles/:magazineId" element={<MagazineViewer />} />
           <Route path="/admin-panel" element={<AdminPanel />} />

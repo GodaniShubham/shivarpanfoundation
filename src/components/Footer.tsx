@@ -16,8 +16,8 @@ const Footer = () => {
   return (
     <footer className="bg-foreground text-primary-foreground">
       <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
-          <div>
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-6">
+          <div className="lg:col-span-2">
             <div className="mb-4 inline-flex rounded-xl bg-primary-foreground p-2 shadow-md">
               <img
                 src={shivarpanLogo}
@@ -98,16 +98,43 @@ const Footer = () => {
 
           <div>
             <h4 className="mb-4 font-display text-lg font-semibold">
+              Governance
+            </h4>
+            <ul className="space-y-2.5">
+              <li>
+                <Link
+                  to="/board-of-trustees"
+                  className="text-sm opacity-70 transition-all duration-300 hover:text-accent hover:opacity-100"
+                >
+                  Board of Trustees
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/team-members"
+                  className="text-sm opacity-70 transition-all duration-300 hover:text-accent hover:opacity-100"
+                >
+                  Team Members
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="mb-4 font-display text-lg font-semibold">
               Get In Touch
             </h4>
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-sm opacity-70">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>Mumbai, Maharashtra, India</span>
+                <span>
+                  F.F, 104-D, 100 Feet Rd, nr. Sachin Tower, Satellite, ANANDNAGAR,
+                  Jodhpur Village, Ahmedabad, Gujarat 380015.
+                </span>
               </li>
               <li className="flex items-center gap-3 text-sm opacity-70">
                 <Phone className="h-4 w-4 shrink-0" />
-                <span>+91 98765 43210</span>
+                <span>+91 98980 38241</span>
               </li>
               <li className="flex items-center gap-3 text-sm opacity-70">
                 <Mail className="h-4 w-4 shrink-0" />
