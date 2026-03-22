@@ -32,6 +32,7 @@ import campaignHealth from "@/assets/campaign-health.jpg";
 import campaignEnvironment from "@/assets/campaign-environment.jpg";
 import adrsKLogo from "@/assets/ADRSK.png";
 import shivarpanLogo from "@/assets/shivarpan-logo.jpeg";
+import hotelLogo from "@/assets/hotel.png";
 import { aboutContent, homeHeroContent } from "@/data/siteContent";
 import { getJson } from "@/lib/api";
 
@@ -174,6 +175,7 @@ const partners = [
     monogram: "ZD",
     glow: "from-accent/20 via-primary/10 to-transparent",
     logoUrl: adrsKLogo,
+    url: "https://adrsk.onrender.com/",
   },
   {
     name: "The Fern Residency",
@@ -181,6 +183,8 @@ const partners = [
     tag: "Hotel Partner",
     monogram: "Hotel",
     glow: "from-primary/20 via-primary/5 to-transparent",
+    logoUrl: hotelLogo,
+    url: "https://theblueshotels.com",
   },
   {
     name: "Shivarpan Foundation",
@@ -196,6 +200,7 @@ const partners = [
     tag: "Events Partner",
     monogram: "Events",
     glow: "from-primary/15 via-accent/10 to-transparent",
+    url: "https://eventflow-6ymx.onrender.com/",
   },
 ];
 
@@ -855,9 +860,13 @@ const Index = () => {
             <div className="w-full inline-flex flex-nowrap overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_96px,_black_calc(100%-96px),transparent_100%)]">
               <div className="partner-marquee flex w-max items-center gap-10">
                 {partnerRow.map((partner, index) => (
-                  <div
+                  <a
                     key={`${partner.name}-${index}`}
-                    className="flex h-20 w-40 items-center justify-center rounded-xl border border-border/60 bg-background/80 px-4 shadow-sm transition hover:scale-[1.03]"
+                    href={"url" in partner && partner.url ? partner.url : undefined}
+                    target={"url" in partner && partner.url ? "_blank" : undefined}
+                    rel={"url" in partner && partner.url ? "noreferrer" : undefined}
+                    className="flex h-20 w-40 items-center justify-center rounded-xl border border-border/60 bg-background/80 px-4 shadow-sm transition hover:scale-[1.03] hover:shadow-md"
+                    aria-label={partner.name}
                   >
                     {"logoUrl" in partner && partner.logoUrl ? (
                       <img src={partner.logoUrl} alt={partner.name} className="h-14 w-auto object-contain" />
@@ -866,7 +875,7 @@ const Index = () => {
                         {partner.monogram}
                       </span>
                     )}
-                  </div>
+                  </a>
                 ))}
               </div>
             </div>
