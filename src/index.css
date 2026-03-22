@@ -2383,6 +2383,19 @@ body.magazine-reader-open {
   color: hsl(var(--accent));
 }
 
+.dynamic-content img {
+  display: block;
+  width: 100%;
+  max-width: min(80vw, 420px);
+  height: auto;
+  max-height: 45vh;
+  object-fit: contain;
+  margin: 1rem auto;
+  border-radius: 10px;
+  box-shadow: 0 18px 40px -24px rgba(15, 23, 42, 0.6);
+  cursor: zoom-in;
+}
+
 @keyframes partner-marquee {
   0% {
     transform: translateX(0);

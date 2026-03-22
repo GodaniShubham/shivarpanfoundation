@@ -1,16 +1,103 @@
 import { Button } from "@/components/ui/button";
-import { magazines } from "@/data/magazines";
+import { getJson } from "@/lib/api";
 import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { BookOpen, CalendarDays } from "lucide-react";
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+type MediaAsset = {
+  id: number;
+  title: string;
+  alt_text: string;
+  media_type: string;
+  url: string;
+};
+
+type MagazineIssue = {
+  id: number;
+  title: string;
+  description: string;
+  publish_at: string;
+  cover_image: MediaAsset | null;
+};
+
+type MagazineStory = {
+  id: number;
+  title: string;
+  excerpt: string;
+  publish_at: string;
+  featured_image: MediaAsset | null;
+  issue: MagazineIssue | null;
+};
 
 const EMagazineArticles = () => {
   const navigate = useNavigate();
   const sectionRef = useRef<HTMLElement | null>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [stories, setStories] = useState<MagazineStory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadStories = async () => {
+      try {
+        const data = await getJson<MagazineStory[]>("magazine/stories/");
+        if (isMounted) {
+          setStories(Array.isArray(data) ? data : []);
+          setError(null);
+        }
+      } catch (fetchError) {
+        console.error(fetchError);
+        if (isMounted) {
+          setError("Unable to load magazine stories. Please try again.");
+          setStories([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadStories();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const formattedStories = useMemo(
+    () =>
+      stories.map((story) => {
+        const coverImage =
+          (story.featured_image?.media_type === "image" && story.featured_image.url) ||
+          (story.issue?.cover_image?.media_type === "image" && story.issue.cover_image.url) ||
+          "";
+        const description =
+          story.excerpt ||
+          story.issue?.description ||
+          "Magazine update from Shivarpan Foundation.";
+        const publishDate = story.publish_at
+          ? new Date(story.publish_at).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })
+          : "";
+
+        return {
+          ...story,
+          coverImage,
+          description,
+          publishDate,
+        };
+      }),
+    [stories],
+  );
 
   useLayoutEffect(() => {
     if (typeof window === "undefined") {
@@ -101,7 +188,7 @@ const EMagazineArticles = () => {
     }, sectionRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [formattedStories.length]);
 
   return (
     <div className="min-h-screen bg-[#fffdf5]">
@@ -131,7 +218,22 @@ const EMagazineArticles = () => {
           className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 xl:grid-cols-3 2xl:grid-cols-4"
           style={{ perspective: "1700px" }}
         >
-          {magazines.map((magazine, index) => (
+          {isLoading ? (
+            <div className="col-span-full rounded-2xl border border-slate-200/80 bg-white p-6 text-center text-sm text-slate-600 shadow-sm">
+              Loading magazine stories...
+            </div>
+          ) : null}
+          {!isLoading && error ? (
+            <div className="col-span-full rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-700">
+              {error}
+            </div>
+          ) : null}
+          {!isLoading && !error && formattedStories.length === 0 ? (
+            <div className="col-span-full rounded-2xl border border-slate-200/80 bg-white p-6 text-center text-sm text-slate-600 shadow-sm">
+              No magazine stories published yet.
+            </div>
+          ) : null}
+          {formattedStories.map((magazine, index) => (
             <div
               key={magazine.id}
               ref={(element) => {
@@ -141,16 +243,22 @@ const EMagazineArticles = () => {
             >
               <div className="group flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-slate-200/80 bg-white shadow-[0_18px_44px_rgba(15,23,42,0.12)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_30px_56px_rgba(15,23,42,0.2)] active:scale-[0.99]">
                 <div className="mag-card-media relative aspect-[5/6] overflow-hidden">
-                  <img
-                    src={magazine.coverImage}
-                    alt={magazine.title}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
-                  />
+                  {magazine.coverImage ? (
+                    <img
+                      src={magazine.coverImage}
+                      alt={magazine.title}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-slate-100 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                      No cover
+                    </div>
+                  )}
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/65 via-black/18 to-transparent" />
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/35 to-transparent" />
                   <span className="absolute left-3 top-3 rounded-full border border-white/25 bg-black/35 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur">
-                    Annual Report
+                    Magazine Story
                   </span>
                   <Button
                     type="button"
@@ -165,7 +273,7 @@ const EMagazineArticles = () => {
 
                 <div className="flex flex-1 flex-col p-5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#f59e0b]">
-                    Publication #{magazine.id}
+                    Story #{magazine.id}
                   </p>
                   <h2
                     className="mt-2 line-clamp-2 text-xl font-semibold leading-tight text-[#14532d]"
@@ -178,7 +286,7 @@ const EMagazineArticles = () => {
                   </p>
                   <p className="mt-4 flex items-center gap-2 text-sm font-medium text-slate-700">
                     <CalendarDays className="h-4 w-4 text-[#f59e0b]" />
-                    Published {magazine.publishDate}
+                    {magazine.publishDate ? `Published ${magazine.publishDate}` : "Publish date unavailable"}
                   </p>
                   <Button
                     type="button"

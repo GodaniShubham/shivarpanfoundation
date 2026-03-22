@@ -30,6 +30,8 @@ import campaignFood from "@/assets/campaign-food.jpg";
 import campaignEducation from "@/assets/campaign-education.jpg";
 import campaignHealth from "@/assets/campaign-health.jpg";
 import campaignEnvironment from "@/assets/campaign-environment.jpg";
+import adrsKLogo from "@/assets/ADRSK.png";
+import shivarpanLogo from "@/assets/shivarpan-logo.jpeg";
 import { aboutContent, homeHeroContent } from "@/data/siteContent";
 import { getJson } from "@/lib/api";
 
@@ -165,14 +167,36 @@ const episodes = [
 ];
 
 const partners = [
-  { name: "Sahyog CSR Collective", focus: "CSR Partner", tag: "Corporate Impact", monogram: "SC", glow: "from-primary/20 via-primary/5 to-transparent" },
-  { name: "Aarambh Education Trust", focus: "Education Partner", tag: "Scholarships", monogram: "AE", glow: "from-accent/20 via-accent/5 to-transparent" },
-  { name: "Nirmal Health Network", focus: "Healthcare Partner", tag: "Medical Camps", monogram: "NH", glow: "from-primary/20 via-accent/10 to-transparent" },
-  { name: "GreenRoots Alliance", focus: "Environment Partner", tag: "Sustainability", monogram: "GR", glow: "from-accent/20 via-primary/10 to-transparent" },
-  { name: "Udaan Youth Council", focus: "Volunteer Network", tag: "Community", monogram: "UY", glow: "from-primary/15 via-accent/10 to-transparent" },
-  { name: "Sankalp Food Bank", focus: "Relief Partner", tag: "Food Security", monogram: "SF", glow: "from-accent/20 via-primary/10 to-transparent" },
-  { name: "Seva Digital Lab", focus: "Tech Partner", tag: "Digital Access", monogram: "SD", glow: "from-primary/20 via-accent/10 to-transparent" },
-  { name: "Rural Care Circle", focus: "Outreach Partner", tag: "Field Delivery", monogram: "RC", glow: "from-accent/20 via-primary/10 to-transparent" },
+  {
+    name: "Zorsk Digital Marketing",
+    focus: "Marketing Partner",
+    tag: "Marketing",
+    monogram: "ZD",
+    glow: "from-accent/20 via-primary/10 to-transparent",
+    logoUrl: adrsKLogo,
+  },
+  {
+    name: "The Fern Residency",
+    focus: "Hospitality Partner",
+    tag: "Hotel Partner",
+    monogram: "Hotel",
+    glow: "from-primary/20 via-primary/5 to-transparent",
+  },
+  {
+    name: "Shivarpan Foundation",
+    focus: "Community Partner",
+    tag: "Foundation",
+    monogram: "SF",
+    glow: "from-accent/20 via-primary/10 to-transparent",
+    logoUrl: shivarpanLogo,
+  },
+  {
+    name: "Aura Event Studio",
+    focus: "Event Partner",
+    tag: "Events Partner",
+    monogram: "Events",
+    glow: "from-primary/15 via-accent/10 to-transparent",
+  },
 ];
 
 const partnerRowOne = [...partners, ...partners];
@@ -180,7 +204,7 @@ const partnerRowOne = [...partners, ...partners];
 const testimonials = [
   {
     quote:
-      "Shivarpan Foundation ki execution speed aur transparency ne humein trust diya. Ground teams ne real-time updates diye, jisse CSR delivery smooth rahi.",
+      "Shivarpan Foundation's execution speed and transparency earned our trust. The ground teams shared real-time updates, which kept CSR delivery smooth.",
     name: "Meera Kulkarni",
     role: "CSR Lead, Sahyog CSR Collective",
     tag: "CSR Partner",
@@ -189,7 +213,7 @@ const testimonials = [
   },
   {
     quote:
-      "Volunteer coordination itni strong thi ki outreach targets time se pehle achieve ho gaye. Community impact ka difference clearly dikhta hai.",
+      "Volunteer coordination was so strong that outreach targets were achieved ahead of time. The difference in community impact is clearly visible.",
     name: "Ankit Rao",
     role: "Volunteer Coordinator, Udaan Youth Council",
     tag: "Volunteer Network",
@@ -198,7 +222,7 @@ const testimonials = [
   },
   {
     quote:
-      "Education kit drive me last-mile delivery aur beneficiary tracking top-class tha. Team ka commitment outstanding hai.",
+      "During the education kit drive, last-mile delivery and beneficiary tracking were top-class. The team's commitment is outstanding.",
     name: "Ritu Sharma",
     role: "Program Manager, Aarambh Education Trust",
     tag: "Education Partner",
@@ -321,32 +345,9 @@ const Index = () => {
   const heroCtaUrl = homepage?.hero_cta_url?.trim() || "/contact";
   const heroImageSrc = homepage?.hero_background_image?.url || heroImage;
 
-  const partnerCards = useMemo(() => {
-    if (homepage?.partner_logos?.length) {
-      return homepage.partner_logos.map((logo, index) => {
-        const initials =
-          logo.title
-            ?.split(" ")
-            .map((word) => word[0])
-            .join("")
-            .slice(0, 2)
-            .toUpperCase() || "SP";
+  const partnerCards = useMemo(() => partners, []);
 
-        return {
-          name: logo.title || "Partner Organization",
-          focus: logo.alt_text || "Mission Partner",
-          tag: "Partner",
-          monogram: initials,
-          glow: index % 2 === 0 ? "from-primary/20 via-primary/5 to-transparent" : "from-accent/20 via-accent/5 to-transparent",
-          logoUrl: logo.url,
-        };
-      });
-    }
-
-    return partners;
-  }, [homepage]);
-
-  const partnerRow = [...partnerCards, ...partnerCards];
+  const partnerRow = [...partnerCards, ...partnerCards, ...partnerCards];
 
   const testimonialsToShow = useMemo(() => {
     if (homepage && homepage.show_testimonials === false) {
@@ -848,36 +849,24 @@ const Index = () => {
             </div>
           </AnimatedSection>
 
-          <div className="partners-marquee">
-            <div className="relative overflow-hidden rounded-[2rem] border border-border/80 bg-card/70 p-4 sm:p-6 backdrop-blur-sm shadow-[0_30px_90px_-60px_hsl(var(--foreground))]">
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-background via-background/90 to-transparent" />
-              <div className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background via-background/90 to-transparent" />
-              <div className="partner-marquee flex w-max items-center gap-4 sm:gap-5">
+          <div className="relative overflow-hidden rounded-[2rem] border border-border/80 bg-card/70 px-6 py-10 backdrop-blur-sm shadow-[0_30px_90px_-60px_hsl(var(--foreground))]">
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background via-background/90 to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background via-background/90 to-transparent" />
+            <div className="w-full inline-flex flex-nowrap overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_96px,_black_calc(100%-96px),transparent_100%)]">
+              <div className="partner-marquee flex w-max items-center gap-10">
                 {partnerRow.map((partner, index) => (
-                  <motion.div
+                  <div
                     key={`${partner.name}-${index}`}
-                    whileHover={{ y: -4 }}
-                    className="group relative min-w-[230px] rounded-2xl border border-border/80 bg-card/90 p-4 shadow-sm backdrop-blur-sm transition-shadow hover:shadow-lg sm:min-w-[260px]"
+                    className="flex h-20 w-40 items-center justify-center rounded-xl border border-border/60 bg-background/80 px-4 shadow-sm transition hover:scale-[1.03]"
                   >
-                    <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${partner.glow} opacity-0 transition-opacity duration-500 group-hover:opacity-100`} />
-                    <div className="relative flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-primary/20 bg-primary/10 text-sm font-semibold text-primary shadow-[0_12px_26px_-18px_hsl(var(--primary))]">
-                        {"logoUrl" in partner && partner.logoUrl ? (
-                          <img src={partner.logoUrl} alt={partner.name} className="h-full w-full object-contain p-1" />
-                        ) : (
-                          partner.monogram
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">{partner.name}</p>
-                        <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{partner.focus}</p>
-                      </div>
-                    </div>
-                    <div className="relative mt-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
-                      <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                      {partner.tag}
-                    </div>
-                  </motion.div>
+                    {"logoUrl" in partner && partner.logoUrl ? (
+                      <img src={partner.logoUrl} alt={partner.name} className="h-14 w-auto object-contain" />
+                    ) : (
+                      <span className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                        {partner.monogram}
+                      </span>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -911,7 +900,7 @@ const Index = () => {
                   </span>
                   <h2 className={sectionTitleClass}>Voices That Trust Our Work</h2>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:text-base">
-                    Partner leaders aur volunteers ka feedback jo ground impact ko reflect karta hai.
+                    Feedback from partner leaders and volunteers that reflects the on-the-ground impact.
                   </p>
                 </div>
                 <div className="rounded-full border border-border/80 bg-card/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
