@@ -27,7 +27,7 @@ const PodcastEpisode = () => {
             Podcast episode not found
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Jo episode aap open karna chah rahe the wo available nahi hai.
+            The episode you were trying to open is not available.
           </p>
           <Button type="button" onClick={() => navigate("/podcast")} className="mt-6">
             <ArrowLeft className="mr-2 h-4 w-4" />

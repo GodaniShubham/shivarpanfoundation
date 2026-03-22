@@ -50,6 +50,9 @@ const DynamicPage = ({ slug: forcedSlug, fallback }: DynamicPageProps) => {
   const [page, setPage] = useState<PagePayload | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState<{ src: string; alt: string } | null>(
+    null,
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -87,6 +90,21 @@ const DynamicPage = ({ slug: forcedSlug, fallback }: DynamicPageProps) => {
     };
   }, [slug]);
 
+  useEffect(() => {
+    if (!lightboxImage) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setLightboxImage(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxImage]);
+
   const heroSubtitle = useMemo(() => {
     if (!page?.seo_description) {
       return "Stay connected with Shivarpan Foundation’s latest initiatives and community updates.";
@@ -108,6 +126,16 @@ const DynamicPage = ({ slug: forcedSlug, fallback }: DynamicPageProps) => {
     );
   }
 
+  const hasBody = Boolean(page.body?.trim());
+  const hasEmbed = Boolean(page.embed_html?.trim());
+  const enabledSections = page.sections?.filter((section) => section.is_enabled) ?? [];
+  const hasSections = enabledSections.length > 0;
+  const shouldShowFallback = Boolean(fallback) && !hasBody && !hasEmbed && !hasSections;
+
+  if (shouldShowFallback) {
+    return <>{fallback}</>;
+  }
+
   return (
     <div className="relative overflow-hidden">
       <PageHero
@@ -120,7 +148,23 @@ const DynamicPage = ({ slug: forcedSlug, fallback }: DynamicPageProps) => {
         <div className="container mx-auto px-4">
           <div className="space-y-6">
             <AnimatedSection className="mx-auto max-w-4xl rounded-[1.8rem] border border-border/85 bg-card/92 p-6 shadow-[0_24px_72px_-52px_hsl(var(--foreground))] backdrop-blur-sm sm:p-8">
-              <div className="dynamic-content space-y-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
+              <div
+                className="dynamic-content space-y-4 text-sm leading-relaxed text-muted-foreground sm:text-base"
+                onClick={(event) => {
+                  const target = event.target as HTMLElement | null;
+                  if (!target || target.tagName !== "IMG") {
+                    return;
+                  }
+
+                  event.preventDefault();
+                  event.stopPropagation();
+                  const image = target as HTMLImageElement;
+                  setLightboxImage({
+                    src: image.currentSrc || image.src,
+                    alt: image.alt || "Image preview",
+                  });
+                }}
+              >
                 {page.body ? (
                   <div dangerouslySetInnerHTML={{ __html: page.body }} />
                 ) : (
@@ -140,9 +184,9 @@ const DynamicPage = ({ slug: forcedSlug, fallback }: DynamicPageProps) => {
               ) : null}
             </AnimatedSection>
 
-            {page.sections?.length ? (
+            {enabledSections.length ? (
               <div className="space-y-5">
-                {page.sections.map((section) => {
+                {enabledSections.map((section) => {
                   const isSplit = ["split", "image-left", "image-right"].includes(section.section_type);
                   const isCta = section.section_type === "cta";
                   const isEmbed = section.section_type === "embed";
@@ -204,6 +248,33 @@ const DynamicPage = ({ slug: forcedSlug, fallback }: DynamicPageProps) => {
           </div>
         </div>
       </section>
+
+      {lightboxImage ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-sm"
+          onClick={() => setLightboxImage(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="relative w-[min(94vw,900px)] overflow-hidden rounded-[20px] bg-white shadow-[0_30px_90px_rgba(0,0,0,0.55)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setLightboxImage(null)}
+              className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white/90 text-sm font-semibold text-slate-700 shadow hover:bg-white"
+            >
+              ×
+            </button>
+            <img
+              src={lightboxImage.src}
+              alt={lightboxImage.alt}
+              className="block h-auto max-h-[85vh] w-full object-contain"
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
