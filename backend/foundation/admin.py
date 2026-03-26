@@ -15,6 +15,8 @@ from foundation.models import (
     Article,
     Category,
     ContactSubmission,
+    Donation,
+    DonationPaymentLog,
     Homepage,
     HomepageSection,
     MagazineIssue,
@@ -292,6 +294,65 @@ class SubscriberAdmin(admin.ModelAdmin):
         return response
 
     export_csv.short_description = "Export selected to CSV (Excel)"
+
+
+class DonationPaymentLogInline(admin.TabularInline):
+    model = DonationPaymentLog
+    extra = 0
+    can_delete = False
+    fields = ("created_at", "event_type", "status_snapshot", "message")
+    readonly_fields = ("created_at", "event_type", "status_snapshot", "message", "payload")
+    ordering = ("-created_at", "-id")
+    show_change_link = True
+
+
+@admin.register(Donation, site=admin_site)
+class DonationAdmin(admin.ModelAdmin):
+    list_display = (
+        "donor_name",
+        "donor_email",
+        "amount",
+        "donation_type",
+        "status",
+        "razorpay_payment_id",
+        "created_at",
+    )
+    list_filter = ("donation_type", "status", "created_at")
+    inlines = [DonationPaymentLogInline]
+    search_fields = (
+        "donor_name",
+        "donor_email",
+        "donor_phone",
+        "receipt",
+        "razorpay_order_id",
+        "razorpay_subscription_id",
+        "razorpay_payment_id",
+    )
+    readonly_fields = (
+        "receipt",
+        "razorpay_order_id",
+        "razorpay_plan_id",
+        "razorpay_subscription_id",
+        "razorpay_payment_id",
+        "razorpay_signature",
+        "verified_at",
+        "created_at",
+        "updated_at",
+    )
+
+
+@admin.register(DonationPaymentLog, site=admin_site)
+class DonationPaymentLogAdmin(admin.ModelAdmin):
+    list_display = ("donation", "event_type", "status_snapshot", "message", "created_at")
+    list_filter = ("event_type", "status_snapshot", "created_at")
+    search_fields = (
+        "donation__donor_name",
+        "donation__donor_email",
+        "donation__receipt",
+        "message",
+        "payload",
+    )
+    readonly_fields = ("donation", "event_type", "status_snapshot", "message", "payload", "created_at", "updated_at")
 
 
 @admin.register(Visitor, site=admin_site)

@@ -5,6 +5,26 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = BASE_DIR.parent
+
+
+def load_env_file(path: Path) -> None:
+    if not path.exists():
+        return
+
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        os.environ.setdefault(key, value)
+
+
+load_env_file(PROJECT_ROOT / ".env")
+load_env_file(BASE_DIR / ".env")
 
 # -------------------------------------------------
 # SECURITY
@@ -61,11 +81,11 @@ JAZZMIN_SETTINGS = {
     "related_modal_active": False,
     "changeform_format": "horizontal_tabs",
     # Optional branding assets (create these files if you want)
-    "site_logo": "img/admin-logo.svg",
-    "login_logo": "img/admin-logo.svg",
-    "site_icon": "img/favicon.svg",
+    "site_logo": "img/shivarpan-logo-square.png",
+    "login_logo": "img/shivarpan-logo-square.png",
+    "site_icon": "img/shivarpan-logo-square.png",
     "site_logo_classes": "brand-image",
-    "custom_css": ["admin/custom.css?v=20260316"],
+    "custom_css": "admin/custom.css",
     "topmenu_links": [
         {"name": "View Site", "url": "/", "new_window": True},
     ],
@@ -211,3 +231,11 @@ CORS_ALLOW_CREDENTIALS = True
 # CSRF (for POST requests from frontend)
 # -------------------------------------------------
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
+
+# -------------------------------------------------
+# RAZORPAY
+# -------------------------------------------------
+RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
+RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
+RAZORPAY_DONATION_BRAND = os.environ.get("RAZORPAY_DONATION_BRAND", "Shivarpan Foundation")

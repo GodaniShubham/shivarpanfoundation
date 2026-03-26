@@ -1,0 +1,115 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  {{ form.media }}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login shiv-login-page{% endblock %}
+
+{% block usertools %}{% endblock %}
+{% block nav-global %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+{% block content_title %}{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+
+{% block content %}
+  <div class="shiv-login-shell">
+    <div class="shiv-login-art">
+      <img src="{% static 'img/shivarpan-logo-square.png' %}" alt="Shivarpan Foundation">
+      <p class="shiv-login-kicker">Shivarpan Foundation</p>
+      <h1>Admin Portal</h1>
+      <p class="shiv-login-copy">Manage content, inquiries, donations, magazines, and website activity from one secure workspace.</p>
+    </div>
+
+    <div class="shiv-login-card">
+      <div class="shiv-login-card__header">
+        <p class="shiv-login-card__eyebrow">Secure Access</p>
+        <h2>Welcome Back</h2>
+        <p>Log in to continue to the admin dashboard.</p>
+      </div>
+
+      {% if form.errors and not form.non_field_errors %}
+        <p class="errornote">
+          {% blocktranslate count counter=form.errors.items|length %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktranslate %}
+        </p>
+      {% endif %}
+
+      {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}
+          <p class="errornote">{{ error }}</p>
+        {% endfor %}
+      {% endif %}
+
+      {% if user.is_authenticated %}
+        <p class="errornote">
+          {% blocktranslate trimmed %}
+            You are authenticated as {{ username }}, but are not authorized to access this page. Would you like to login to a different account?
+          {% endblocktranslate %}
+        </p>
+      {% endif %}
+
+      <form action="{{ app_path }}" method="post" id="login-form" class="shiv-login-form">
+        {% csrf_token %}
+        <div class="shiv-login-field">
+          <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+          {{ form.username.errors }}
+          {{ form.username }}
+        </div>
+
+        <div class="shiv-login-field">
+          <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+          {{ form.password.errors }}
+          <div class="shiv-login-password-wrap">
+            {{ form.password }}
+            <button
+              type="button"
+              class="shiv-login-password-toggle"
+              data-password-toggle
+              aria-controls="{{ form.password.id_for_label }}"
+              aria-label="Show password"
+              aria-pressed="false"
+            >
+              Show
+            </button>
+          </div>
+          <input type="hidden" name="next" value="{{ next }}">
+        </div>
+
+        {% url 'admin_password_reset' as password_reset_url %}
+        {% if password_reset_url %}
+          <div class="shiv-login-help">
+            <a href="{{ password_reset_url }}">{% translate 'Forgotten your password or username?' %}</a>
+          </div>
+        {% endif %}
+
+        <div class="submit-row">
+          <input type="submit" value="{% translate 'Log in' %}">
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extrajs %}
+  {{ block.super }}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var toggle = document.querySelector("[data-password-toggle]");
+      var passwordInput = document.getElementById("{{ form.password.id_for_label }}");
+
+      if (!toggle || !passwordInput) {
+        return;
+      }
+
+      toggle.addEventListener("click", function () {
+        var isHidden = passwordInput.type === "password";
+        passwordInput.type = isHidden ? "text" : "password";
+        toggle.textContent = isHidden ? "Hide" : "Show";
+        toggle.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
+        toggle.setAttribute("aria-pressed", isHidden ? "true" : "false");
+      });
+    });
+  </script>
+{% endblock %}

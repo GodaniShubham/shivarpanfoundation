@@ -386,7 +386,7 @@ const Index = () => {
   return (
     <div className="overflow-hidden">
       {/* Hero */}
-      <section className="relative min-h-[92svh] md:min-h-screen flex items-center overflow-hidden">
+      <section className="relative flex min-h-[calc(100svh-5rem)] items-center overflow-hidden md:min-h-[calc(100vh-5rem)]">
         {heroImageSrc ? (
           <img
             src={heroImageSrc}
