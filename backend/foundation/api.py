@@ -1,9 +1,12 @@
 from __future__ import annotations
-
+from foundation.models import GalleryItem
 from django.db import IntegrityError
 from rest_framework import generics, serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
+from .serializers import StoryItemSerializer
+from .models import StoryItem 
 
 from foundation.models import (
     Article,
@@ -157,6 +160,24 @@ class TestimonialSerializer(serializers.ModelSerializer):
         model = Testimonial
         fields = ["id", "name", "designation", "organization", "quote", "photo", "created_at"]
 
+# 🔥 GALLERY API ADD KAR
+class GalleryItemSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = GalleryItem
+        fields = ["id", "title", "category", "image"]
+
+    def get_image(self, obj):
+        request = self.context.get("request")
+        if obj.image and obj.image.file:
+            return request.build_absolute_uri(obj.image.file.url)
+        return None
+
+
+class GalleryItemViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = GalleryItem.objects.filter(is_active=True).order_by("sort_order")
+    serializer_class = GalleryItemSerializer
 
 class MagazineIssueSerializer(serializers.ModelSerializer):
     cover_image = MediaAssetSerializer(read_only=True)
@@ -387,3 +408,7 @@ class SubscriberCreateAPIView(generics.CreateAPIView):
                 name=serializer.validated_data.get("name", ""),
                 source=serializer.validated_data.get("source", ""),
             )
+
+class StoryItemViewSet(ModelViewSet):
+    queryset = StoryItem.objects.filter(is_active=True).order_by("sort_order")
+    serializer_class = StoryItemSerializer

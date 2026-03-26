@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import { Target, Eye, Award, Users, Heart, CheckCircle, Sparkles } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import AnimatedSection from "@/components/AnimatedSection";
-import aboutHero from "@/assets/about-hero.jpg";
 import { aboutContent } from "@/data/siteContent";
 
 const team = [
@@ -27,7 +26,13 @@ const values = [
   { icon: <Award className="h-6 w-6" />, title: "Excellence", desc: "Striving for the highest standards in all our programs" },
 ];
 
-const About = () => (
+type AboutProps = {
+  heroTitle?: string;
+  heroSubtitle?: string;
+  heroImage?: string | null;
+};
+
+const About = ({ heroTitle, heroSubtitle, heroImage }: AboutProps) => (
   <div className="relative overflow-hidden">
     <motion.div
       aria-hidden
@@ -57,7 +62,11 @@ const About = () => (
       ))}
     </div>
 
-    <PageHero title="About Us" subtitle={aboutContent.heroSubtitle} image={aboutHero} />
+    <PageHero
+      title={heroTitle ?? "About Us"}
+      subtitle={heroSubtitle ?? aboutContent.heroSubtitle}
+      image={heroImage ?? undefined}
+    />
 
     <section className="relative py-10 sm:py-12 md:py-14">
       <div className="container mx-auto px-4">

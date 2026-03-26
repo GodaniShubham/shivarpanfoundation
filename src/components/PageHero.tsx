@@ -3,12 +3,16 @@ import { motion } from "framer-motion";
 interface PageHeroProps {
   title: string;
   subtitle: string;
-  image: string;
+  image?: string | null;
 }
 
 const PageHero = ({ title, subtitle, image }: PageHeroProps) => (
   <section className="relative h-[45vh] min-h-[350px] flex items-center justify-center overflow-hidden">
-    <img src={image} alt={title} className="absolute inset-0 w-full h-full object-cover" />
+    {image ? (
+      <img src={image} alt={title} className="absolute inset-0 w-full h-full object-cover" />
+    ) : (
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.35),transparent_55%),radial-gradient(circle_at_20%_80%,hsl(var(--accent)/0.25),transparent_52%),linear-gradient(135deg,hsl(var(--foreground))_0%,hsl(var(--primary))_45%,hsl(var(--accent))_100%)]" />
+    )}
     <div className="absolute inset-0 hero-overlay opacity-80" />
     <div className="relative z-10 text-center px-4">
       <motion.h1

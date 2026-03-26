@@ -3,7 +3,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowRight, Sparkles } from "lucide-react";
 import campaignFood from "@/assets/campaign-food.jpg";
-import aboutHero from "@/assets/about-hero.jpg";
+import aboutHero from "@/assets/about-hero.png";
 import campaignEducation from "@/assets/campaign-education.jpg";
 import campaignHealth from "@/assets/campaign-health.jpg";
 import campaignEnvironment from "@/assets/campaign-environment.jpg";

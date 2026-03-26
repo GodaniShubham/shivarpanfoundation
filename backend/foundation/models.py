@@ -316,6 +316,86 @@ class PageSection(TimeStampedModel):
         return base
 
 
+class GalleryItem(TimeStampedModel):
+    title = models.CharField(max_length=255)
+    category = models.CharField(max_length=120, blank=True)
+    image = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="gallery_items"
+    )
+    sort_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["sort_order", "-created_at"]
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class Story(PublishableModel, SeoFields):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+    excerpt = models.TextField(blank=True)
+    body = models.TextField(blank=True)
+    date_label = models.CharField(max_length=120, blank=True)
+    location_label = models.CharField(max_length=180, blank=True)
+    read_time = models.CharField(max_length=50, blank=True)
+    category = models.CharField(max_length=120, blank=True)
+    featured_image = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="story_images"
+    )
+    is_featured = models.BooleanField(default=False)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "-publish_at"]
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class Award(TimeStampedModel):
+    title = models.CharField(max_length=255)
+    presenter = models.CharField(max_length=255, blank=True)
+    year = models.CharField(max_length=20, blank=True)
+    summary = models.TextField(blank=True)
+    image = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="award_images"
+    )
+    detail_images = models.ManyToManyField(
+        MediaAsset, blank=True, related_name="award_detail_images"
+    )
+    sort_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["sort_order", "-created_at"]
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class PodcastEpisode(PublishableModel):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)
+    summary = models.TextField(blank=True)
+    description = models.TextField(blank=True)
+    duration_label = models.CharField(max_length=50, blank=True)
+    host = models.CharField(max_length=255, blank=True)
+    cover_image = models.ForeignKey(
+        MediaAsset, null=True, blank=True, on_delete=models.SET_NULL, related_name="podcast_cover_images"
+    )
+    audio_url = models.URLField(blank=True)
+    is_featured = models.BooleanField(default=False)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "-publish_at"]
+
+    def __str__(self) -> str:
+        return self.title
+
+
 class UpcomingEvent(TimeStampedModel):
     title = models.CharField(max_length=255)
     subtitle = models.CharField(max_length=255, blank=True)
@@ -384,3 +464,12 @@ class PageView(models.Model):
 
     def __str__(self) -> str:
         return f"{self.path} ({self.created_at:%Y-%m-%d %H:%M})"
+    
+class StoryItem(models.Model):
+    title = models.CharField(max_length=255)
+    image = models.ForeignKey(MediaAsset, on_delete=models.CASCADE)
+    sort_order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.title

@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { cloneElement, isValidElement, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import AnimatedSection from "@/components/AnimatedSection";
 import PageHero from "@/components/PageHero";
 import NotFound from "@/pages/NotFound";
-import heroFallback from "@/assets/about-hero.jpg";
 import { getJson } from "@/lib/api";
 
 type MediaAsset = {
@@ -133,6 +132,13 @@ const DynamicPage = ({ slug: forcedSlug, fallback }: DynamicPageProps) => {
   const shouldShowFallback = Boolean(fallback) && !hasBody && !hasEmbed && !hasSections;
 
   if (shouldShowFallback) {
+    if (isValidElement(fallback)) {
+      return cloneElement(fallback, {
+        heroTitle: page.title,
+        heroSubtitle: page.seo_description?.trim() || undefined,
+        heroImage: page.cover_image?.url || undefined,
+      } as Record<string, unknown>);
+    }
     return <>{fallback}</>;
   }
 
@@ -141,7 +147,7 @@ const DynamicPage = ({ slug: forcedSlug, fallback }: DynamicPageProps) => {
       <PageHero
         title={page.title}
         subtitle={heroSubtitle}
-        image={page.cover_image?.url || heroFallback}
+        image={page.cover_image?.url}
       />
 
       <section className="relative py-10 sm:py-12 md:py-14">

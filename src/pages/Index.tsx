@@ -24,8 +24,7 @@ import { Button } from "@/components/ui/button";
 import AnimatedSection from "@/components/AnimatedSection";
 import ImpactCounter from "@/components/ImpactCounter";
 import CinematicImpactStory from "@/components/CinematicImpactStory";
-import heroImage from "@/assets/hero-main.jpg";
-import aboutHero from "@/assets/about-hero.jpg";
+import aboutHero from "@/assets/about-hero.png";
 import campaignFood from "@/assets/campaign-food.jpg";
 import campaignEducation from "@/assets/campaign-education.jpg";
 import campaignHealth from "@/assets/campaign-health.jpg";
@@ -348,7 +347,7 @@ const Index = () => {
   const heroDescription = homepage?.hero_subtitle?.trim() || homeHeroContent.description;
   const heroCtaText = homepage?.hero_cta_text?.trim() || "Donate or Partner";
   const heroCtaUrl = homepage?.hero_cta_url?.trim() || "/contact";
-  const heroImageSrc = homepage?.hero_background_image?.url || heroImage;
+  const heroImageSrc = homepage?.hero_background_image?.url;
 
   const partnerCards = useMemo(() => partners, []);
 
@@ -388,13 +387,17 @@ const Index = () => {
     <div className="overflow-hidden">
       {/* Hero */}
       <section className="relative min-h-[92svh] md:min-h-screen flex items-center overflow-hidden">
-        <img
-          src={heroImageSrc}
-          alt="Shivarpan Foundation"
-          loading="eager"
-          fetchPriority="high"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        {heroImageSrc ? (
+          <img
+            src={heroImageSrc}
+            alt="Shivarpan Foundation"
+            loading="eager"
+            fetchPriority="high"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.35),transparent_55%),radial-gradient(circle_at_20%_80%,hsl(var(--accent)/0.25),transparent_52%),linear-gradient(135deg,hsl(var(--foreground))_0%,hsl(var(--primary))_45%,hsl(var(--accent))_100%)]" />
+        )}
         <div className="absolute inset-0 hero-overlay opacity-80" />
         <div className="absolute inset-0 bg-gradient-to-r from-foreground/65 via-foreground/40 to-transparent" />
 
