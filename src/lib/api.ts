@@ -9,6 +9,35 @@ export const API_BASE_URL = rawBaseUrl.replace(/\/+$/, "");
 export const apiUrl = (path: string) =>
   `${API_BASE_URL}/${path.replace(/^\/+/, "")}`;
 
+function extractErrorMessage(data: unknown): string {
+  if (Array.isArray(data) && data.length > 0) {
+    return data
+      .map((item) => extractErrorMessage(item))
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  if (typeof data === "string") {
+    return data;
+  }
+
+  if (data && typeof data === "object") {
+    if ("detail" in data && typeof data.detail === "string") {
+      return data.detail;
+    }
+
+    const values = Object.values(data)
+      .map((item) => extractErrorMessage(item))
+      .filter(Boolean);
+
+    if (values.length > 0) {
+      return values.join(", ");
+    }
+  }
+
+  return "Request failed";
+}
+
 export async function postJson<TResponse = JsonRecord>(
   path: string,
   payload: JsonRecord
@@ -27,10 +56,7 @@ export async function postJson<TResponse = JsonRecord>(
   }
 
   if (!response.ok) {
-    const message =
-      (data && typeof data === "object" && "detail" in data && data.detail) ||
-      "Request failed";
-    throw new Error(String(message));
+    throw new Error(extractErrorMessage(data));
   }
 
   return data as TResponse;
@@ -45,10 +71,7 @@ export async function getJson<TResponse = JsonRecord>(path: string): Promise<TRe
   const data = (await response.json()) as TResponse;
 
   if (!response.ok) {
-    const message =
-      (data && typeof data === "object" && "detail" in data && data.detail) ||
-      "Request failed";
-    throw new Error(String(message));
+    throw new Error(extractErrorMessage(data));
   }
 
   return data;

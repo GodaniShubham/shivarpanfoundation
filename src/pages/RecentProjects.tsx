@@ -10,6 +10,7 @@ gsap.registerPlugin(Flip);
 
 const introRowCount = 5;
 const introColCount = 7;
+const recentProjectsNavOffset = 80;
 
 const RecentProjects = () => {
   const [projectImages, setProjectImages] = useState<any[]>([]);
@@ -58,6 +59,7 @@ const RecentProjects = () => {
   const middleItemInnerRef = useRef<HTMLDivElement | null>(null);
   const middleItemImageRef = useRef<HTMLDivElement | null>(null);
   const introTimelineRef = useRef<gsap.core.Timeline | null>(null);
+  const contentLockTopRef = useRef(0);
 
   const introRows = useMemo(
     () =>
@@ -112,6 +114,55 @@ const RecentProjects = () => {
   useLayoutEffect(() => () => {
     introTimelineRef.current?.kill();
   }, []);
+
+  useLayoutEffect(() => {
+    if (!introOpen) {
+      contentLockTopRef.current = 0;
+      return;
+    }
+
+    const firstSection = contentRef.current?.querySelector<HTMLElement>("section");
+    if (!firstSection) {
+      contentLockTopRef.current = 0;
+      return;
+    }
+
+    const syncContentTop = () => {
+      const nextLockTop = Math.max(
+        0,
+        firstSection.getBoundingClientRect().top + window.scrollY - recentProjectsNavOffset,
+      );
+
+      contentLockTopRef.current = nextLockTop;
+
+      if (window.scrollY < nextLockTop) {
+        window.scrollTo({
+          top: nextLockTop,
+          left: 0,
+          behavior: "auto",
+        });
+      }
+    };
+
+    const keepContentPinned = () => {
+      if (window.scrollY < contentLockTopRef.current) {
+        window.scrollTo({
+          top: contentLockTopRef.current,
+          left: 0,
+          behavior: "auto",
+        });
+      }
+    };
+
+    syncContentTop();
+    window.addEventListener("resize", syncContentTop);
+    window.addEventListener("scroll", keepContentPinned, { passive: true });
+
+    return () => {
+      window.removeEventListener("resize", syncContentTop);
+      window.removeEventListener("scroll", keepContentPinned);
+    };
+  }, [introOpen]);
 
   useLayoutEffect(() => {
     const rows = rowRefs.current.filter(Boolean);
@@ -273,11 +324,6 @@ const RecentProjects = () => {
           setIntroOpen(true);
           setIsIntroTransitioning(false);
           setIsTitleMerging(false);
-          window.scrollTo({
-            top: 0,
-            left: 0,
-            behavior: "auto",
-          });
         },
       })
       .add(

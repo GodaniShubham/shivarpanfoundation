@@ -9,6 +9,8 @@ from foundation.api import (
     ArticleViewSet,
     AwardViewSet,
     ContactSubmissionCreateAPIView,
+    DonationCheckoutAPIView,
+    DonationVerifyAPIView,
     HomepageAPIView,
     MagazineIssueViewSet,
     MagazineStoryViewSet,
@@ -39,4 +41,6 @@ urlpatterns = [
     path("homepage/", HomepageAPIView.as_view(), name="homepage"),
     path("contact/", ContactSubmissionCreateAPIView.as_view(), name="contact-submit"),
     path("newsletter/subscribe/", SubscriberCreateAPIView.as_view(), name="newsletter-subscribe"),
+    path("donations/checkout/", DonationCheckoutAPIView.as_view(), name="donation-checkout"),
+    path("donations/verify/", DonationVerifyAPIView.as_view(), name="donation-verify"),
 ]

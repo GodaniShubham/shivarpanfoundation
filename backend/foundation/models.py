@@ -234,6 +234,74 @@ class Subscriber(TimeStampedModel):
         return self.email
 
 
+class Donation(TimeStampedModel):
+    class DonationType(models.TextChoices):
+        ONE_TIME = "one_time", "One Time"
+        MONTHLY = "monthly", "Monthly"
+
+    class Status(models.TextChoices):
+        CREATED = "created", "Created"
+        CHECKOUT_CREATED = "checkout_created", "Checkout Created"
+        PAID = "paid", "Paid"
+        SUBSCRIPTION_AUTHORIZED = "subscription_authorized", "Subscription Authorized"
+        FAILED = "failed", "Failed"
+
+    donor_name = models.CharField(max_length=255)
+    donor_email = models.EmailField()
+    donor_phone = models.CharField(max_length=32)
+    amount = models.PositiveIntegerField(help_text="Amount in rupees.")
+    currency = models.CharField(max_length=8, default="INR")
+    donation_type = models.CharField(
+        max_length=20,
+        choices=DonationType.choices,
+        default=DonationType.ONE_TIME,
+    )
+    payment_mode_preference = models.CharField(max_length=50, blank=True)
+    message = models.TextField(blank=True)
+    status = models.CharField(max_length=32, choices=Status.choices, default=Status.CREATED)
+    receipt = models.CharField(max_length=80, unique=True)
+
+    razorpay_order_id = models.CharField(max_length=80, blank=True)
+    razorpay_plan_id = models.CharField(max_length=80, blank=True)
+    razorpay_subscription_id = models.CharField(max_length=80, blank=True)
+    razorpay_payment_id = models.CharField(max_length=80, blank=True)
+    razorpay_signature = models.CharField(max_length=255, blank=True)
+    razorpay_status = models.CharField(max_length=40, blank=True)
+
+    notes = models.JSONField(default=dict, blank=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.donor_name} - Rs {self.amount} ({self.get_donation_type_display()})"
+
+
+class DonationPaymentLog(TimeStampedModel):
+    class EventType(models.TextChoices):
+        CREATED = "created", "Created"
+        CHECKOUT_REQUESTED = "checkout_requested", "Checkout Requested"
+        ORDER_CREATED = "order_created", "Order Created"
+        PLAN_CREATED = "plan_created", "Plan Created"
+        SUBSCRIPTION_CREATED = "subscription_created", "Subscription Created"
+        VERIFY_REQUESTED = "verify_requested", "Verify Requested"
+        VERIFIED = "verified", "Verified"
+        FAILED = "failed", "Failed"
+
+    donation = models.ForeignKey(Donation, on_delete=models.CASCADE, related_name="payment_logs")
+    event_type = models.CharField(max_length=40, choices=EventType.choices)
+    status_snapshot = models.CharField(max_length=32, blank=True)
+    message = models.CharField(max_length=255, blank=True)
+    payload = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def __str__(self) -> str:
+        return f"{self.donation_id} - {self.event_type}"
+
+
 class Homepage(TimeStampedModel):
     id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
 

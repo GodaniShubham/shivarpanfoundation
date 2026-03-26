@@ -1,24 +1,73 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { BadgeCheck, HeartHandshake, Landmark, ShieldCheck, Wallet } from "lucide-react";
+import { BadgeCheck, CalendarSync, CheckCircle2, HeartHandshake, Landmark, LoaderCircle, Repeat, ShieldCheck, Wallet } from "lucide-react";
 import AnimatedSection from "@/components/AnimatedSection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { postJson } from "@/lib/api";
 
 const presetAmounts = [500, 1000, 2500, 5000];
-const paymentModes = ["UPI", "Card", "Net Banking"] as const;
+const donationModes = ["one_time", "monthly"] as const;
+
+type DonationMode = (typeof donationModes)[number];
+
+type CheckoutResponse = {
+  checkout_type: DonationMode;
+  donation_id: number;
+  key: string;
+  amount: number;
+  currency: string;
+  order_id?: string;
+  subscription_id?: string;
+  name: string;
+  description: string;
+  prefill: {
+    name: string;
+    email: string;
+    contact: string;
+  };
+};
+
+type RazorpaySuccessResponse = {
+  razorpay_payment_id: string;
+  razorpay_order_id?: string;
+  razorpay_subscription_id?: string;
+  razorpay_signature: string;
+};
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
+  }
+}
+
+const loadRazorpayScript = async () => {
+  if (window.Razorpay) {
+    return true;
+  }
+
+  return new Promise<boolean>((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 const DonateNow = () => {
   const { toast } = useToast();
+  const [donationMode, setDonationMode] = useState<DonationMode>("one_time");
   const [selectedAmount, setSelectedAmount] = useState<number>(1000);
   const [customAmount, setCustomAmount] = useState("");
-  const [paymentMode, setPaymentMode] = useState<(typeof paymentModes)[number]>("UPI");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const finalAmount = useMemo(() => {
     const parsed = Number(customAmount);
@@ -27,18 +76,109 @@ const DonateNow = () => {
     }
     return selectedAmount;
   }, [customAmount, selectedAmount]);
+  const isCustomAmountActive = customAmount.trim() !== "";
 
-  const handleDonate = (event: React.FormEvent) => {
-    event.preventDefault();
-    toast({
-      title: "Donation request submitted",
-      description: `Amount: Rs ${finalAmount.toLocaleString("en-IN")} via ${paymentMode}`,
-    });
+  const resetForm = () => {
     setCustomAmount("");
+    setSelectedAmount(1000);
     setName("");
     setEmail("");
     setPhone("");
     setMessage("");
+    setDonationMode("one_time");
+  };
+
+  const handleDonate = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (finalAmount < 100) {
+      toast({
+        title: "Invalid amount",
+        description: "Minimum donation amount is Rs 100.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded || !window.Razorpay) {
+        throw new Error("Razorpay checkout script failed to load.");
+      }
+
+      const checkout = await postJson<CheckoutResponse>("donations/checkout/", {
+        donation_type: donationMode,
+        amount: finalAmount,
+        currency: "INR",
+        name,
+        email,
+        phone,
+        message,
+      });
+
+      const razorpay = new window.Razorpay({
+        key: checkout.key,
+        amount: checkout.amount,
+        currency: checkout.currency,
+        name: checkout.name,
+        description: checkout.description,
+        order_id: checkout.order_id,
+        subscription_id: checkout.subscription_id,
+        prefill: checkout.prefill,
+        notes: {
+          donation_id: checkout.donation_id,
+          donation_mode: donationMode,
+        },
+        recurring: donationMode === "monthly" ? 1 : undefined,
+        handler: async (response: RazorpaySuccessResponse) => {
+          try {
+            const verification = await postJson<{ detail: string; status: string }>("donations/verify/", {
+              donation_id: checkout.donation_id,
+              donation_type: donationMode,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id || checkout.order_id || "",
+              razorpay_subscription_id: response.razorpay_subscription_id || checkout.subscription_id || "",
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            toast({
+              title: donationMode === "monthly" ? "Monthly donation started" : "Donation successful",
+              description:
+                donationMode === "monthly"
+                  ? "Auto-debit mandate is authorized. Razorpay will charge monthly as per your selected amount."
+                  : `Payment verified. Status: ${verification.status}`,
+            });
+            resetForm();
+          } catch (verifyError) {
+            toast({
+              title: "Payment received but verification failed",
+              description: verifyError instanceof Error ? verifyError.message : "Please verify this payment from the admin panel.",
+              variant: "destructive",
+            });
+          } finally {
+            setIsSubmitting(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setIsSubmitting(false);
+          },
+        },
+        theme: {
+          color: "#f59e0b",
+        },
+      });
+
+      razorpay.open();
+    } catch (error) {
+      setIsSubmitting(false);
+      toast({
+        title: "Unable to start payment",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -58,7 +198,7 @@ const DonateNow = () => {
                 <HeartHandshake className="h-3.5 w-3.5" />
                 Donate Now
               </p>
-              <h1 className="mt-4 font-display text-4xl font-bold leading-tight text-foreground md:text-6xl">
+              <h1 className="mt-4 font-display text-3xl font-bold leading-tight text-foreground sm:text-4xl md:text-5xl lg:text-[4.25rem]">
                 Your Support Fuels Direct Community Impact
               </h1>
               <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted-foreground md:text-base">
@@ -85,7 +225,68 @@ const DonateNow = () => {
                   </span>
                 </div>
 
-                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <div className="mt-6 grid gap-3 md:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => setDonationMode("one_time")}
+                    className={`relative overflow-hidden rounded-[1.6rem] border px-5 py-5 text-left transition-all ${
+                      donationMode === "one_time"
+                        ? "border-primary bg-[linear-gradient(145deg,hsl(var(--primary)/0.14),hsl(var(--background))_72%)] shadow-[0_18px_45px_-34px_hsl(var(--primary))]"
+                        : "border-border bg-background/80 hover:border-primary/40"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Single Donation</p>
+                        <p className="mt-1 font-display text-[2rem] font-bold leading-none text-foreground">One-Time</p>
+                        <p className="mt-3 max-w-xs text-sm text-muted-foreground">Pay once and complete the donation in a single Razorpay checkout.</p>
+                      </div>
+                      <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full border ${
+                        donationMode === "one_time" ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground"
+                      }`}>
+                        <CheckCircle2 className="h-4 w-4" />
+                      </span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDonationMode("monthly")}
+                    className={`relative overflow-hidden rounded-[1.6rem] border px-5 py-5 text-left transition-all ${
+                      donationMode === "monthly"
+                        ? "border-accent bg-[linear-gradient(145deg,hsl(var(--accent)/0.16),hsl(var(--background))_72%)] shadow-[0_18px_45px_-34px_hsl(var(--accent))]"
+                        : "border-border bg-background/80 hover:border-accent/50"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Recurring Support</p>
+                        <p className="mt-1 inline-flex items-center gap-2 font-display text-[2rem] font-bold leading-none text-foreground">
+                          Monthly
+                          <CalendarSync className="h-5 w-5 text-accent" />
+                        </p>
+                        <p className="mt-3 max-w-xs text-sm text-muted-foreground">Authorize one mandate now. Razorpay can auto-charge every month after approval.</p>
+                      </div>
+                      <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full border ${
+                        donationMode === "monthly" ? "border-accent bg-accent text-accent-foreground" : "border-border text-muted-foreground"
+                      }`}>
+                        <Repeat className="h-4 w-4" />
+                      </span>
+                    </div>
+                  </button>
+                </div>
+
+                <div className="mt-7 rounded-[1.8rem] border border-border/80 bg-background/55 p-4 sm:p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Choose Amount</p>
+                      <p className="mt-1 text-sm text-muted-foreground">Quick amount select karoge to custom field empty rahega. Custom amount likhoge to wahi final use hoga.</p>
+                    </div>
+                    <span className="inline-flex rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
+                      Active: {isCustomAmountActive ? "Custom amount" : `Quick Rs ${selectedAmount.toLocaleString("en-IN")}`}
+                    </span>
+                  </div>
+
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   {presetAmounts.map((amount) => (
                     <button
                       type="button"
@@ -94,27 +295,53 @@ const DonateNow = () => {
                         setSelectedAmount(amount);
                         setCustomAmount("");
                       }}
-                      className={`rounded-2xl border px-4 py-4 text-left transition-colors ${
-                        selectedAmount === amount && customAmount === ""
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-background/70 hover:border-primary/40"
+                      className={`rounded-2xl border px-4 py-4 text-left transition-all ${
+                        selectedAmount === amount && !isCustomAmountActive
+                          ? "border-primary bg-primary/10 shadow-[0_14px_36px_-30px_hsl(var(--primary))]"
+                          : "border-border bg-card hover:border-primary/40"
                       }`}
                     >
                       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Quick Amount</p>
-                      <p className="mt-1 font-display text-2xl font-bold text-foreground">Rs {amount.toLocaleString("en-IN")}</p>
+                      <div className="mt-2 flex items-center justify-between gap-3">
+                        <p className="font-display text-2xl font-bold text-foreground">Rs {amount.toLocaleString("en-IN")}</p>
+                        {selectedAmount === amount && !isCustomAmountActive ? (
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                            <CheckCircle2 className="h-4 w-4" />
+                          </span>
+                        ) : null}
+                      </div>
                     </button>
                   ))}
                 </div>
 
-                <Input
-                  type="number"
-                  min={100}
-                  step={100}
-                  value={customAmount}
-                  onChange={(event) => setCustomAmount(event.target.value)}
-                  placeholder="Enter custom amount (minimum Rs 100)"
-                  className="mt-4 h-11 bg-background/70"
-                />
+                <div className={`mt-4 rounded-2xl border p-3 transition-all ${
+                  isCustomAmountActive
+                    ? "border-accent bg-accent/5 shadow-[0_14px_36px_-30px_hsl(var(--accent))]"
+                    : "border-border bg-card"
+                }`}>
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Custom Amount</p>
+                    {isCustomAmountActive ? (
+                      <button
+                        type="button"
+                        onClick={() => setCustomAmount("")}
+                        className="text-xs font-medium text-primary transition-colors hover:text-accent"
+                      >
+                        Clear custom
+                      </button>
+                    ) : null}
+                  </div>
+                  <Input
+                    type="number"
+                    min={100}
+                    step={100}
+                    value={customAmount}
+                    onChange={(event) => setCustomAmount(event.target.value)}
+                    placeholder="Enter custom amount (minimum Rs 100)"
+                    className="h-11 border-0 bg-transparent px-2 shadow-none focus-visible:ring-0"
+                  />
+                </div>
+                </div>
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   <Input
@@ -139,15 +366,9 @@ const DonateNow = () => {
                     placeholder="Phone Number"
                     className="h-11 bg-background/70"
                   />
-                  <select
-                    value={paymentMode}
-                    onChange={(event) => setPaymentMode(event.target.value as (typeof paymentModes)[number])}
-                    className="h-11 rounded-md border border-input bg-background/70 px-3 text-sm text-foreground outline-none ring-offset-background transition-shadow focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  >
-                    {paymentModes.map((mode) => (
-                      <option key={mode}>{mode}</option>
-                    ))}
-                  </select>
+                  <div className="flex h-11 items-center rounded-md border border-input bg-background/70 px-3 text-sm text-muted-foreground">
+                    Razorpay checkout will show available methods
+                  </div>
                 </div>
 
                 <Textarea
@@ -160,10 +381,20 @@ const DonateNow = () => {
 
                 <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm text-muted-foreground">
-                    Total donation: <span className="font-semibold text-foreground">Rs {finalAmount.toLocaleString("en-IN")}</span>
+                    {donationMode === "monthly" ? "Monthly donation" : "Total donation"}:{" "}
+                    <span className="font-semibold text-foreground">Rs {finalAmount.toLocaleString("en-IN")}</span>
                   </p>
-                  <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                    Proceed to Donate
+                  <Button type="submit" disabled={isSubmitting} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                    {isSubmitting ? (
+                      <>
+                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                        Opening Checkout
+                      </>
+                    ) : donationMode === "monthly" ? (
+                      "Start Monthly Donation"
+                    ) : (
+                      "Proceed to Donate"
+                    )}
                   </Button>
                 </div>
               </form>
@@ -182,11 +413,14 @@ const DonateNow = () => {
                 </div>
 
                 <div className="rounded-2xl border border-border/85 bg-card p-5 shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">Accepted Modes</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">Checkout Flow</p>
                   <div className="mt-4 space-y-2.5 text-sm text-foreground">
-                    <p className="inline-flex items-center gap-2"><Wallet className="h-4 w-4 text-primary" /> UPI and wallets</p>
-                    <p className="inline-flex items-center gap-2"><Landmark className="h-4 w-4 text-primary" /> Net banking</p>
-                    <p className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary" /> Debit/Credit cards</p>
+                    <p className="inline-flex items-center gap-2"><Wallet className="h-4 w-4 text-primary" /> Razorpay will show UPI, cards, net banking, and other supported methods</p>
+                    <p className="inline-flex items-center gap-2"><Landmark className="h-4 w-4 text-primary" /> Monthly mode depends on subscription mandate support</p>
+                    <p className="inline-flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary" /> No pre-selection is required on this form</p>
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      Monthly mode uses Razorpay subscriptions. Final recurring methods depend on your Razorpay account setup and the donor's bank/card mandate support.
+                    </p>
                   </div>
                 </div>
               </div>

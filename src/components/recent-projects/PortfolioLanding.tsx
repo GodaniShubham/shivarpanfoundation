@@ -21,7 +21,7 @@ const PortfolioLanding = ({ titleRef, featuredProject }: PortfolioLandingProps) 
   );
 
   return (
-    <section className="relative isolate -mt-[610px] overflow-hidden border-b border-border/70 pb-16 pt-6 sm:pt-8 lg:pb-20 lg:pt-10">
+    <section className="relative isolate overflow-hidden border-b border-border/70 pb-16 pt-6 sm:pt-8 lg:pb-20 lg:pt-10">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,hsl(var(--background))_0%,hsl(var(--muted))_52%,hsl(var(--background))_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.18] [background-image:linear-gradient(to_right,hsl(var(--border)/0.7)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.55)_1px,transparent_1px)] [background-size:72px_72px]" />
 
