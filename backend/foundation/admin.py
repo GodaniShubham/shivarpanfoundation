@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import csv
 
+from foundation.models import GalleryItem
 from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.http import HttpResponse
 from django.utils import timezone
+from .models import StoryItem
 
 from core.admin_site import admin_site
 from foundation.models import (
@@ -304,3 +306,18 @@ class PageViewAdmin(admin.ModelAdmin):
     list_filter = ("created_at",)
     search_fields = ("path", "full_path", "referer", "user_agent", "visitor__visitor_id")
     autocomplete_fields = ("visitor",)
+
+
+@admin.register(GalleryItem, site=admin_site)
+class GalleryItemAdmin(admin.ModelAdmin):
+    list_display = ("title", "category", "is_active", "sort_order", "created_at")
+    list_filter = ("category", "is_active")
+    search_fields = ("title", "category")
+    autocomplete_fields = ("image",)
+
+@admin.register(StoryItem, site=admin_site)
+class StoryItemAdmin(admin.ModelAdmin):
+    list_display = ("id", "title", "sort_order", "is_active")
+    list_editable = ("sort_order", "is_active")
+    ordering = ("sort_order",)
+    search_fields = ("title",)

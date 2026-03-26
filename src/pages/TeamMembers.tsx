@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import PageHero from "@/components/PageHero";
 import AnimatedSection from "@/components/AnimatedSection";
-import aboutHero from "@/assets/about-hero.jpg";
+import aboutHero from "@/assets/about-hero.png";
 
 const teamMembers = [
   { name: "Rajendra Shivarpan", role: "Founder & President", initials: "RS" },

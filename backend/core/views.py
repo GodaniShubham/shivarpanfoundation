@@ -5,7 +5,8 @@ from django.shortcuts import render
 from django.http import HttpResponse
 
 from foundation.models import Article, Homepage, MagazineIssue, MagazineStory, Page, Project, SiteSettings, Testimonial
-
+from django.http import JsonResponse
+from foundation.models import GalleryItem
 
 def robots_txt(request):
     settings_obj = SiteSettings.get_solo()
@@ -119,3 +120,16 @@ def testimonials_list(request):
     return render(
         request, "public/testimonials.html", {**_site_context(), "testimonials": testimonials}
     )
+
+def gallery_api(request):
+    items = GalleryItem.objects.filter(is_active=True).order_by("sort_order")
+
+    data = []
+    for item in items:
+        data.append({
+            "title": item.title,
+            "category": item.category,
+            "image": item.image.file.url if item.image else ""
+        })
+
+    return JsonResponse(data, safe=False)

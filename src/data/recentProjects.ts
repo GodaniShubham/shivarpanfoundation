@@ -9,7 +9,7 @@ import {
   Stethoscope,
   type LucideIcon,
 } from "lucide-react";
-import aboutHero from "@/assets/about-hero.jpg";
+import aboutHero from "@/assets/about-hero.png";
 import campaignEducation from "@/assets/campaign-education.jpg";
 import campaignEnvironment from "@/assets/campaign-environment.jpg";
 import campaignFood from "@/assets/campaign-food.jpg";
