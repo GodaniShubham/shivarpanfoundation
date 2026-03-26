@@ -14,6 +14,7 @@ from foundation.api import (
     MagazineStoryViewSet,
     MediaAssetViewSet,
     PageViewSet,
+    PodcastEpisodeViewSet,
     ProjectViewSet,
     SubscriberCreateAPIView,
     TestimonialViewSet,
@@ -29,6 +30,7 @@ router.register(r"media", MediaAssetViewSet, basename="media")
 router.register(r"projects", ProjectViewSet, basename="project")
 router.register(r"awards", AwardViewSet, basename="award")
 router.register(r"testimonials", TestimonialViewSet, basename="testimonial")
+router.register(r"podcast/episodes", PodcastEpisodeViewSet, basename="podcast-episode")
 router.register(r"magazine/issues", MagazineIssueViewSet, basename="magazine-issue")
 router.register(r"magazine/stories", MagazineStoryViewSet, basename="magazine-story")
 router.register(r"upcoming-events", UpcomingEventViewSet, basename="upcoming-event")

@@ -131,6 +131,48 @@ const Awards = () => {
   const previewLeftRef = useRef<HTMLDivElement | null>(null);
   const previewRightRef = useRef<HTMLDivElement | null>(null);
 
+  useEffect(() => {
+    const normalizeUrl = (url?: string) => {
+      if (!url) return "";
+      return url.startsWith("http") ? url : `http://127.0.0.1:8000${url}`;
+    };
+
+    axios
+      .get("http://127.0.0.1:8000/api/awards/")
+      .then((res) => {
+        const items = Array.isArray(res.data) ? res.data : [];
+        const formatted = items
+          .map((item: any, index: number) => {
+            const imageUrl = normalizeUrl(item?.image?.url);
+            if (!imageUrl) {
+              return null;
+            }
+            const detailImages = Array.isArray(item?.detail_images)
+              ? item.detail_images
+                  .map((img: any) => normalizeUrl(img?.url))
+                  .filter(Boolean)
+              : [];
+            return {
+              id: item?.id ?? index,
+              title: item?.title ?? "Recognition",
+              presenter: item?.presenter ?? "",
+              year: item?.year ?? "",
+              summary: item?.summary ?? "",
+              image: imageUrl,
+              detailImages: detailImages.length ? detailImages : [imageUrl],
+            } as AwardRecognition;
+          })
+          .filter(Boolean) as AwardRecognition[];
+
+        if (formatted.length) {
+          setAwardRecognitions(formatted);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }, []);
+
   const parallaxSlides = useMemo(
     () =>
       Array.from({ length: 14 }, (_, index) => {

@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import AnimatedSection from "@/components/AnimatedSection";
 import { useNavigate } from "react-router-dom";
 import { podcastEpisodes } from "@/data/podcastEpisodes";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import axios from "axios";
 
 type EpisodeWithMeta = (typeof podcastEpisodes)[number] & {
   category: string;
@@ -28,10 +29,46 @@ const getDurationInMinutes = (duration: string) => {
 const Podcast = () => {
   const navigate = useNavigate();
   const episodesSectionRef = useRef<HTMLDivElement | null>(null);
+  const [episodes, setEpisodes] = useState(podcastEpisodes);
+
+  useEffect(() => {
+    const normalizeUrl = (url?: string) => {
+      if (!url) return "";
+      return url.startsWith("http") ? url : `http://127.0.0.1:8000${url}`;
+    };
+
+    axios
+      .get("http://127.0.0.1:8000/api/podcast/episodes/")
+      .then((res) => {
+        const items = Array.isArray(res.data) ? res.data : [];
+        const formatted = items
+          .map((item: any, index: number) => {
+            const imageUrl = normalizeUrl(item?.cover_image?.url);
+            if (!imageUrl) return null;
+            return {
+              id: item?.id ?? index + 1,
+              slug: item?.slug ?? `episode-${index + 1}`,
+              title: item?.title ?? "Podcast Episode",
+              host: item?.host ? `Host: ${item.host}` : "Host: Shivarpan",
+              duration: item?.duration_label ?? "0 min",
+              summary: item?.summary ?? "",
+              description: item?.description ?? "",
+              image: imageUrl,
+              videoUrl: item?.audio_url ?? "",
+            };
+          })
+          .filter(Boolean);
+
+        if (formatted.length) {
+          setEpisodes(formatted as typeof podcastEpisodes);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
 
   const episodeCatalog = useMemo<EpisodeWithMeta[]>(
     () =>
-      podcastEpisodes.map((episode, index) => ({
+      episodes.map((episode, index) => ({
         ...episode,
         category:
           index % 3 === 0
@@ -48,7 +85,7 @@ const Podcast = () => {
         listensK: Number((16.4 - index * 1.9).toFixed(1)),
         code: `EP-${String(index + 1).padStart(2, "0")}`,
       })),
-    [],
+    [episodes],
   );
 
   const spotlightEpisode = episodeCatalog[0];

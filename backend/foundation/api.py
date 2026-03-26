@@ -19,6 +19,7 @@ from foundation.models import (
     MediaAsset,
     Page,
     PageSection,
+    PodcastEpisode,
     Award,
     Project,
     Subscriber,
@@ -297,6 +298,28 @@ class UpcomingEventSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+class PodcastEpisodeSerializer(serializers.ModelSerializer):
+    cover_image = MediaAssetSerializer(read_only=True)
+
+    class Meta:
+        model = PodcastEpisode
+        fields = [
+            "id",
+            "title",
+            "slug",
+            "summary",
+            "description",
+            "duration_label",
+            "host",
+            "cover_image",
+            "audio_url",
+            "publish_at",
+            "is_featured",
+            "sort_order",
+            "created_at",
+            "updated_at",
+        ]
+
 
 class PublicPublishedOnlyMixin:
     def get_queryset(self):
@@ -333,6 +356,11 @@ class UpcomingEventViewSet(viewsets.ReadOnlyModelViewSet):
         if not event:
             return Response({})
         return Response(self.get_serializer(event).data)
+
+class PodcastEpisodeViewSet(PublicPublishedOnlyMixin, viewsets.ReadOnlyModelViewSet):
+    queryset = PodcastEpisode.objects.all().order_by("sort_order", "-publish_at")
+    serializer_class = PodcastEpisodeSerializer
+    filterset_fields = ["slug", "is_featured"]
 
 
 class ArticleViewSet(PublicPublishedOnlyMixin, viewsets.ReadOnlyModelViewSet):

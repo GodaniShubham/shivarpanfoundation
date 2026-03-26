@@ -242,6 +242,26 @@ type MediaAsset = {
   url: string;
 };
 
+type GalleryItemPayload = {
+  id: number;
+  title: string;
+  category: string;
+  image: string | null;
+};
+
+type StoryItemPayload = {
+  id: number;
+  title: string;
+  image: string | null;
+};
+
+type ProjectPayload = {
+  id: number;
+  title: string;
+  slug: string;
+  featured_image: MediaAsset | null;
+};
+
 type HomepagePayload = {
   hero_title: string;
   hero_subtitle: string;
@@ -303,12 +323,14 @@ const darkSectionTitleClass = "mt-3 font-display text-2xl font-bold text-primary
 const Index = () => {
   const [homepage, setHomepage] = useState<HomepagePayload | null>(null);
   const [testimonialItems, setTestimonialItems] = useState<TestimonialPayload[]>([]);
-  const totalRaised = projects.reduce((sum, project) => sum + project.raised, 0);
-  const totalGoal = projects.reduce((sum, project) => sum + project.goal, 0);
-  const completionRate = totalGoal === 0 ? 0 : Math.round((totalRaised / totalGoal) * 100);
-  const fullyFunded = projects.filter((project) => project.raised >= project.goal).length;
-  const featuredProject = projects[0];
-  const featuredProgress = Math.min((featuredProject.raised / featuredProject.goal) * 100, 100);
+  const [galleryItems, setGalleryItems] = useState<GalleryItemPayload[]>([]);
+  const [storyItems, setStoryItems] = useState<StoryItemPayload[]>([]);
+  const [projectItems, setProjectItems] = useState<ProjectPayload[]>([]);
+
+  const normalizeUrl = (url?: string | null) => {
+    if (!url) return "";
+    return url.startsWith("http") ? url : `http://127.0.0.1:8000${url}`;
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -335,8 +357,54 @@ const Index = () => {
       }
     };
 
+    const loadGallery = async () => {
+      try {
+        const data = await getJson<GalleryItemPayload[]>("gallery/");
+        if (isMounted) {
+          setGalleryItems(
+            data.map((item) => ({
+              ...item,
+              image: normalizeUrl(item.image),
+            })),
+          );
+        }
+      } catch (error) {
+        console.error("Gallery API error", error);
+      }
+    };
+
+    const loadStoryItems = async () => {
+      try {
+        const data = await getJson<StoryItemPayload[]>("story-items/");
+        if (isMounted) {
+          setStoryItems(
+            data.map((item) => ({
+              ...item,
+              image: normalizeUrl(item.image),
+            })),
+          );
+        }
+      } catch (error) {
+        console.error("Story items API error", error);
+      }
+    };
+
+    const loadProjects = async () => {
+      try {
+        const data = await getJson<ProjectPayload[]>("projects/");
+        if (isMounted) {
+          setProjectItems(data);
+        }
+      } catch (error) {
+        console.error("Projects API error", error);
+      }
+    };
+
     loadHomepage();
     loadTestimonials();
+    loadGallery();
+    loadStoryItems();
+    loadProjects();
 
     return () => {
       isMounted = false;
@@ -349,9 +417,86 @@ const Index = () => {
   const heroCtaUrl = homepage?.hero_cta_url?.trim() || "/contact";
   const heroImageSrc = homepage?.hero_background_image?.url;
 
-  const partnerCards = useMemo(() => partners, []);
+  const partnerCards = useMemo(() => {
+    if (homepage?.partner_logos?.length) {
+      return homepage.partner_logos.map((logo, index) => {
+        const fallback = partners[index % partners.length];
+        return {
+          ...fallback,
+          name: logo.title || fallback.name,
+          logoUrl: logo.url,
+        };
+      });
+    }
+    return partners;
+  }, [homepage]);
 
   const partnerRow = [...partnerCards, ...partnerCards, ...partnerCards];
+
+  const aboutVisualsData = useMemo(
+    () =>
+      aboutVisuals.map((visual, index) => {
+        const item = galleryItems[index];
+        return {
+          ...visual,
+          image: item?.image || visual.image,
+          alt: item?.title || visual.alt,
+          label: item?.category || visual.label,
+        };
+      }),
+    [galleryItems],
+  );
+
+  const galleryShotsData = useMemo(
+    () =>
+      galleryShots.map((shot, index) => {
+        const item = galleryItems[index];
+        return {
+          ...shot,
+          image: item?.image || shot.image,
+          title: item?.title || shot.title,
+          tag: item?.category || shot.tag,
+        };
+      }),
+    [galleryItems],
+  );
+
+  const storiesData = useMemo(
+    () =>
+      stories.map((story, index) => {
+        const item = storyItems[index];
+        return {
+          ...story,
+          image: item?.image || story.image,
+          title: item?.title || story.title,
+        };
+      }),
+    [storyItems],
+  );
+
+  const projectsData = useMemo(() => {
+    if (!projectItems.length) {
+      return projects;
+    }
+
+    const normalizeKey = (value: string) => value.trim().toLowerCase();
+    const mapByTitle = new Map(
+      projectItems.map((item) => [normalizeKey(item.title || ""), item]),
+    );
+
+    return projects.map((project, index) => {
+      const match = mapByTitle.get(normalizeKey(project.title)) || projectItems[index];
+      const image = normalizeUrl(match?.featured_image?.url) || project.image;
+      return { ...project, image };
+    });
+  }, [projectItems]);
+
+  const totalRaised = projectsData.reduce((sum, project) => sum + project.raised, 0);
+  const totalGoal = projectsData.reduce((sum, project) => sum + project.goal, 0);
+  const completionRate = totalGoal === 0 ? 0 : Math.round((totalRaised / totalGoal) * 100);
+  const fullyFunded = projectsData.filter((project) => project.raised >= project.goal).length;
+  const featuredProject = projectsData[0];
+  const featuredProgress = Math.min((featuredProject.raised / featuredProject.goal) * 100, 100);
 
   const testimonialsToShow = useMemo(() => {
     if (homepage && homepage.show_testimonials === false) {
@@ -677,7 +822,7 @@ const Index = () => {
                   className="pointer-events-none absolute -inset-2 rounded-[2rem] border border-primary/20"
                 />
                 <div className="grid grid-cols-2 gap-4">
-                  {aboutVisuals.map((visual, index) => (
+                  {aboutVisualsData.map((visual, index) => (
                     <motion.div
                       key={visual.alt}
                       initial={{ opacity: 0, y: 22 }}
@@ -747,15 +892,15 @@ const Index = () => {
                 className="rounded-2xl overflow-hidden border border-border h-60 sm:h-72 md:h-[430px] group relative"
               >
                 <img
-                  src={galleryShots[0].image}
-                  alt={galleryShots[0].title}
+                  src={galleryShotsData[0].image}
+                  alt={galleryShotsData[0].title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
               </motion.div>
             </Link>
 
             <div className="md:col-span-7 grid sm:grid-cols-2 gap-4">
-              {galleryShots.slice(1).map((shot) => (
+              {galleryShotsData.slice(1).map((shot) => (
                 <Link key={shot.title} to="/gallery" className="block">
                   <motion.div
                     whileHover={{ y: -6 }}
@@ -789,24 +934,24 @@ const Index = () => {
             <AnimatedSection className="lg:col-span-3">
               <motion.div whileHover={{ y: -6 }} className="rounded-3xl overflow-hidden border border-border bg-card h-full shadow-lg group">
                 <div className="relative h-64 sm:h-72 md:h-80">
-                  <img src={stories[0].image} alt={stories[0].title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <img src={storiesData[0].image} alt={storiesData[0].title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-transparent to-transparent" />
                   <p className="absolute bottom-3 left-3 text-primary-foreground text-xs uppercase tracking-wider">Featured Story</p>
                 </div>
                 <div className="p-5 md:p-6">
                   <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
                     <Calendar className="w-3.5 h-3.5" />
-                    {stories[0].date}
+                    {storiesData[0].date}
                   </div>
-                  <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground mb-3">{stories[0].title}</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground">{stories[0].excerpt}</p>
+                  <h3 className="font-display text-xl sm:text-2xl font-semibold text-foreground mb-3">{storiesData[0].title}</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground">{storiesData[0].excerpt}</p>
                 </div>
               </motion.div>
             </AnimatedSection>
 
             <AnimatedSection className="lg:col-span-2">
               <div className="space-y-4">
-                {stories.slice(1).map((story, i) => (
+                {storiesData.slice(1).map((story, i) => (
                   <motion.div
                     key={story.title}
                     whileHover={{ x: 4 }}
@@ -1018,7 +1163,7 @@ const Index = () => {
                     <Award className="h-3.5 w-3.5 text-accent" /> Completion
                   </p>
                   <p className="font-display text-xl font-bold text-foreground">
-                    {completionRate}% ({fullyFunded}/{projects.length} Achieved)
+                    {completionRate}% ({fullyFunded}/{projectsData.length} Achieved)
                   </p>
                 </div>
               </div>
@@ -1092,7 +1237,7 @@ const Index = () => {
 
             <AnimatedSection className="xl:col-span-5">
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-                {projects.slice(1).map((project, i) => {
+                {projectsData.slice(1).map((project, i) => {
                   const progress = Math.min((project.raised / project.goal) * 100, 100);
                   const shortfall = Math.max(project.goal - project.raised, 0);
 

@@ -1,22 +1,77 @@
 import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
-import {
-  getPodcastEpisodeBySlug,
-  podcastEpisodes,
-} from "@/data/podcastEpisodes";
+import { podcastEpisodes } from "@/data/podcastEpisodes";
 import { ArrowLeft, Clock3, Mic, PlayCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
 
 const PodcastEpisode = () => {
   const { episodeSlug } = useParams();
   const navigate = useNavigate();
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
+  const [episode, setEpisode] = useState(() =>
+    episodeSlug ? podcastEpisodes.find((item) => item.slug === episodeSlug) : undefined,
+  );
+  const [episodes, setEpisodes] = useState(podcastEpisodes);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const episode = episodeSlug ? getPodcastEpisodeBySlug(episodeSlug) : undefined;
 
   useEffect(() => {
     setIsPlayerVisible(false);
+  }, [episodeSlug]);
+
+  useEffect(() => {
+    const normalizeUrl = (url?: string) => {
+      if (!url) return "";
+      return url.startsWith("http") ? url : `http://127.0.0.1:8000${url}`;
+    };
+
+    if (!episodeSlug) {
+      return;
+    }
+
+    axios
+      .get("http://127.0.0.1:8000/api/podcast/episodes/")
+      .then((res) => {
+        const items = Array.isArray(res.data) ? res.data : [];
+        const formatted = items.map((item: any, index: number) => {
+          const imageUrl = normalizeUrl(item?.cover_image?.url);
+          return {
+            id: item?.id ?? index + 1,
+            slug: item?.slug ?? `episode-${index + 1}`,
+            title: item?.title ?? "Podcast Episode",
+            host: item?.host ? `Host: ${item.host}` : "Host: Shivarpan",
+            duration: item?.duration_label ?? "0 min",
+            summary: item?.summary ?? "",
+            description: item?.description ?? "",
+            image: imageUrl || podcastEpisodes[0]?.image,
+            videoUrl: item?.audio_url ?? "",
+          };
+        });
+        if (formatted.length) {
+          setEpisodes(formatted as typeof podcastEpisodes);
+        }
+        const matched = items.find((item: any) => item?.slug === episodeSlug);
+        if (!matched) {
+          return;
+        }
+        const imageUrl = normalizeUrl(matched?.cover_image?.url);
+        const nextEpisode = {
+          id: matched?.id ?? 0,
+          slug: matched?.slug ?? episodeSlug,
+          title: matched?.title ?? "Podcast Episode",
+          host: matched?.host ? `Host: ${matched.host}` : "Host: Shivarpan",
+          duration: matched?.duration_label ?? "0 min",
+          summary: matched?.summary ?? "",
+          description: matched?.description ?? "",
+          image: imageUrl || podcastEpisodes[0]?.image,
+          videoUrl: matched?.audio_url ?? "",
+        };
+        setEpisode(nextEpisode);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   }, [episodeSlug]);
 
   if (!episode) {
@@ -38,7 +93,7 @@ const PodcastEpisode = () => {
     );
   }
 
-  const relatedEpisodes = podcastEpisodes
+  const relatedEpisodes = episodes
     .filter((item) => item.slug !== episode.slug)
     .slice(0, 3);
 

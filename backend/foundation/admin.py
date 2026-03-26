@@ -13,6 +13,7 @@ from .models import StoryItem
 from core.admin_site import admin_site
 from foundation.models import (
     Article,
+    Award,
     Category,
     ContactSubmission,
     Homepage,
@@ -23,6 +24,7 @@ from foundation.models import (
     Page,
     PageView,
     PageSection,
+    PodcastEpisode,
     Project,
     SiteSettings,
     Subscriber,
@@ -178,6 +180,23 @@ class TestimonialAdmin(admin.ModelAdmin):
     list_filter = ("is_approved", "is_hidden")
     search_fields = ("name", "organization", "designation", "quote")
     autocomplete_fields = ("photo",)
+
+@admin.register(Award, site=admin_site)
+class AwardAdmin(admin.ModelAdmin):
+    list_display = ("title", "presenter", "year", "sort_order", "is_active", "created_at")
+    list_filter = ("is_active", "year")
+    search_fields = ("title", "presenter", "year")
+    autocomplete_fields = ("image",)
+    filter_horizontal = ("detail_images",)
+
+@admin.register(PodcastEpisode, site=admin_site)
+class PodcastEpisodeAdmin(RichTextAdminMixin, admin.ModelAdmin):
+    rich_text_fields = ("description", "summary")
+    list_display = ("title", "slug", "status", "publish_at", "is_featured", "sort_order")
+    list_filter = ("status", "is_featured")
+    search_fields = ("title", "slug", "host")
+    prepopulated_fields = {"slug": ("title",)}
+    autocomplete_fields = ("cover_image",)
 
 
 @admin.register(Project, site=admin_site)
