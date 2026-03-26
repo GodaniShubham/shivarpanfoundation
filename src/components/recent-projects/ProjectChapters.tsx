@@ -3,11 +3,15 @@ import { Calendar, CheckCircle2, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   formatRecentProjectsInr,
-  recentProjects,
   recentProjectsNumberFormat,
 } from "@/data/recentProjects";
+import type { RecentProject } from "@/data/recentProjects";
 
-const ProjectChapters = () => (
+interface ProjectChaptersProps {
+  projects: RecentProject[];
+}
+
+const ProjectChapters = ({ projects }: ProjectChaptersProps) => (
   <section className="relative py-14 md:py-20">
     <div className="container mx-auto px-4">
       <motion.div
@@ -29,7 +33,7 @@ const ProjectChapters = () => (
       </motion.div>
 
       <div className="space-y-10">
-        {recentProjects.map((project, index) => {
+        {projects.map((project, index) => {
           const ProjectIcon = project.icon;
           const utilizationPercent = Math.round((project.spent / project.budget) * 100);
           const isCompleted = project.status === "Completed";

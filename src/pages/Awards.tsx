@@ -1,4 +1,5 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import axios from "axios";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowRight, Sparkles } from "lucide-react";
@@ -37,7 +38,7 @@ const heroKineticLines = [
   "milestones milestones milestones",
 ];
 
-const awardRecognitions: AwardRecognition[] = [
+const fallbackAwards: AwardRecognition[] = [
   {
     id: 0,
     title: "Excellence in Community Development",
@@ -113,6 +114,7 @@ const awardRecognitions: AwardRecognition[] = [
 ];
 
 const Awards = () => {
+  const [awardRecognitions, setAwardRecognitions] = useState<AwardRecognition[]>(fallbackAwards);
   const [experienceStarted, setExperienceStarted] = useState(false);
   const [isHeroAnimating, setIsHeroAnimating] = useState(false);
   const experienceSectionRef = useRef<HTMLElement | null>(null);
@@ -140,16 +142,16 @@ const Awards = () => {
           year: award.year,
         };
       }),
-    [],
+    [awardRecognitions],
   );
 
   const previewLeftCards = useMemo(
     () => awardRecognitions.filter((_, index) => index % 4 === 2 || index % 4 === 3),
-    [],
+    [awardRecognitions],
   );
   const previewRightCards = useMemo(
     () => awardRecognitions.filter((_, index) => index % 4 === 0 || index % 4 === 1),
-    [],
+    [awardRecognitions],
   );
 
   const scrollToExperience = () => {

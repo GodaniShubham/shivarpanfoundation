@@ -1,12 +1,10 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import axios from "axios";
 import { gsap } from "gsap";
 import { Flip } from "gsap/Flip";
 import RecentProjectsContent from "@/components/recent-projects/RecentProjectsContent";
 import RecentProjectsIntro from "@/components/recent-projects/RecentProjectsIntro";
-import {
-  recentIntroGridImages,
-  recentProjects,
-} from "@/data/recentProjects";
+import { recentProjects } from "@/data/recentProjects";
 
 gsap.registerPlugin(Flip);
 
@@ -14,9 +12,41 @@ const introRowCount = 5;
 const introColCount = 7;
 
 const RecentProjects = () => {
+  const [projectImages, setProjectImages] = useState<any[]>([]);
+  const [projectImageMap, setProjectImageMap] = useState<Record<string, string>>({});
+  
   const [introOpen, setIntroOpen] = useState(false);
   const [isIntroTransitioning, setIsIntroTransitioning] = useState(false);
   const [isTitleMerging, setIsTitleMerging] = useState(false);
+
+  useEffect(() => {
+    axios
+      .get("http://127.0.0.1:8000/api/projects/")
+      .then((res) => {
+        console.log("PROJECT IMAGES:", res.data);
+
+        const imageMap: Record<string, string> = {};
+        const formatted = res.data
+          .map((item: any) => {
+            const rawUrl = item?.featured_image?.url;
+            if (!rawUrl) return null;
+            const image = rawUrl.startsWith("http")
+              ? rawUrl
+              : `http://127.0.0.1:8000${rawUrl}`;
+            if (item?.slug) {
+              imageMap[item.slug] = image;
+            } else if (item?.title) {
+              imageMap[item.title.trim().toLowerCase()] = image;
+            }
+            return { image };
+          })
+          .filter(Boolean) as { image: string }[];
+
+        setProjectImages(formatted);
+        setProjectImageMap(imageMap);
+      })
+      .catch((err) => console.error(err));
+  }, []);
 
   const introSectionRef = useRef<HTMLElement | null>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
@@ -35,12 +65,14 @@ const RecentProjects = () => {
         Array.from(
           { length: introColCount },
           (_, colIndex) =>
-            recentIntroGridImages[
-              (rowIndex * introColCount + colIndex) % recentIntroGridImages.length
-            ],
+           projectImages.length > 0
+  ? projectImages[
+      (rowIndex * introColCount + colIndex) % projectImages.length
+    ].image
+  : ""
         ),
       ),
-    [],
+    [projectImages],
   );
 
   const totalBudget = useMemo(
@@ -341,6 +373,7 @@ const RecentProjects = () => {
         contentRef={contentRef}
         contentTitleRef={contentTitleRef}
         introOpen={introOpen}
+        imageOverrides={projectImageMap}
         activeProjects={activeProjects}
         completedProjects={completedProjects}
         totalBeneficiaries={totalBeneficiaries}

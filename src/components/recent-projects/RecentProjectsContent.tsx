@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import type { RefObject } from "react";
+import { useMemo } from "react";
 import { recentProjects } from "@/data/recentProjects";
 import AllocationTrust from "./AllocationTrust";
 import ClosingPartnershipCta from "./ClosingPartnershipCta";
@@ -12,6 +13,7 @@ interface RecentProjectsContentProps {
   contentRef: RefObject<HTMLDivElement | null>;
   contentTitleRef: RefObject<HTMLHeadingElement | null>;
   introOpen: boolean;
+  imageOverrides?: Record<string, string>;
   activeProjects: number;
   completedProjects: number;
   totalBeneficiaries: number;
@@ -26,6 +28,7 @@ const RecentProjectsContent = ({
   contentRef,
   contentTitleRef,
   introOpen,
+  imageOverrides,
   activeProjects,
   completedProjects,
   totalBeneficiaries,
@@ -35,8 +38,24 @@ const RecentProjectsContent = ({
   totalBudget,
   utilization,
 }: RecentProjectsContentProps) => {
+  const projectsWithImages = useMemo(
+    () =>
+      recentProjects.map((project) => {
+        const keyBySlug = project.slug;
+        const keyByTitle = project.title.trim().toLowerCase();
+        return {
+          ...project,
+          image:
+            imageOverrides?.[keyBySlug] ??
+            imageOverrides?.[keyByTitle] ??
+            project.image,
+        };
+      }),
+    [imageOverrides],
+  );
   const featuredProject =
-    recentProjects.find((project) => project.status === "Active") ?? recentProjects[0];
+    projectsWithImages.find((project) => project.status === "Active") ??
+    projectsWithImages[0];
 
   if (!featuredProject) {
     return null;
@@ -71,7 +90,7 @@ const RecentProjectsContent = ({
         totalBudget={totalBudget}
         utilization={utilization}
       />
-      <ProjectChapters />
+      <ProjectChapters projects={projectsWithImages} />
       <ExecutionModel />
       <AllocationTrust
         activeProjects={activeProjects}
