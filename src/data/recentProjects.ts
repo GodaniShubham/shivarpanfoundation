@@ -17,6 +17,7 @@ import campaignHealth from "@/assets/campaign-health.jpg";
 
 export interface RecentProject {
   title: string;
+  slug: string;
   image: string;
   icon: LucideIcon;
   focus: string;
@@ -48,6 +49,7 @@ export interface DeliveryStep {
 export const recentProjects: RecentProject[] = [
   {
     title: "Winter Nutrition Relief Network",
+    slug: "winter-nutrition-relief-network",
     image: campaignFood,
     icon: HandHeart,
     focus: "Food Security",
@@ -69,6 +71,7 @@ export const recentProjects: RecentProject[] = [
   },
   {
     title: "Scholarship Continuity Accelerator",
+    slug: "scholarship-continuity-accelerator",
     image: campaignEducation,
     icon: BookOpenText,
     focus: "Education",
@@ -90,6 +93,7 @@ export const recentProjects: RecentProject[] = [
   },
   {
     title: "Rural Preventive Health Corridor",
+    slug: "rural-preventive-health-corridor",
     image: campaignHealth,
     icon: Stethoscope,
     focus: "Healthcare",
@@ -111,6 +115,7 @@ export const recentProjects: RecentProject[] = [
   },
   {
     title: "Urban Green Belt Restoration Grid",
+    slug: "urban-green-belt-restoration-grid",
     image: campaignEnvironment,
     icon: Leaf,
     focus: "Environment",

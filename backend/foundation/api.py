@@ -19,6 +19,7 @@ from foundation.models import (
     MediaAsset,
     Page,
     PageSection,
+    Award,
     Project,
     Subscriber,
     Tag,
@@ -159,6 +160,26 @@ class TestimonialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Testimonial
         fields = ["id", "name", "designation", "organization", "quote", "photo", "created_at"]
+
+class AwardSerializer(serializers.ModelSerializer):
+    image = MediaAssetSerializer(read_only=True)
+    detail_images = MediaAssetSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Award
+        fields = [
+            "id",
+            "title",
+            "presenter",
+            "year",
+            "summary",
+            "image",
+            "detail_images",
+            "sort_order",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
 
 # 🔥 GALLERY API ADD KAR
 class GalleryItemSerializer(serializers.ModelSerializer):
@@ -336,6 +357,10 @@ class ProjectViewSet(PublicPublishedOnlyMixin, viewsets.ReadOnlyModelViewSet):
 class TestimonialViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Testimonial.objects.filter(is_approved=True, is_hidden=False).order_by("-created_at")
     serializer_class = TestimonialSerializer
+
+class AwardViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Award.objects.filter(is_active=True).order_by("sort_order", "-created_at")
+    serializer_class = AwardSerializer
 
 
 class MagazineIssueViewSet(PublicPublishedOnlyMixin, viewsets.ReadOnlyModelViewSet):

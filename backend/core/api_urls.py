@@ -7,6 +7,7 @@ from foundation.api import StoryItemViewSet
 
 from foundation.api import (
     ArticleViewSet,
+    AwardViewSet,
     ContactSubmissionCreateAPIView,
     HomepageAPIView,
     MagazineIssueViewSet,
@@ -26,6 +27,7 @@ router.register(r"gallery", GalleryItemViewSet, basename="gallery")
 router.register(r"articles", ArticleViewSet, basename="article")
 router.register(r"media", MediaAssetViewSet, basename="media")
 router.register(r"projects", ProjectViewSet, basename="project")
+router.register(r"awards", AwardViewSet, basename="award")
 router.register(r"testimonials", TestimonialViewSet, basename="testimonial")
 router.register(r"magazine/issues", MagazineIssueViewSet, basename="magazine-issue")
 router.register(r"magazine/stories", MagazineStoryViewSet, basename="magazine-story")
