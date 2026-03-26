@@ -53,7 +53,7 @@ const AppRoutes = () => {
           <Route path="/podcast" element={<DynamicPage slug="podcast" fallback={<Podcast />} />} />
           <Route path="/podcast/:episodeSlug" element={<PodcastEpisode />} />
           <Route path="/contact" element={<DynamicPage slug="contact" fallback={<Contact />} />} />
-          <Route path="/donate-now" element={<DynamicPage slug="donate-now" fallback={<DonateNow />} />} />
+          <Route path="/donate-now" element={<DonateNow />} />
           <Route path="/upcoming-events" element={<DynamicPage slug="upcoming-events" fallback={<UpcomingEvents />} />} />
           <Route path="/privacy-policy" element={<DynamicPage slug="privacy-policy" fallback={<PrivacyPolicy />} />} />
           <Route path="/terms-and-conditions" element={<DynamicPage slug="terms-and-conditions" fallback={<TermsAndConditions />} />} />

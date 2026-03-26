@@ -1,17 +1,31 @@
 from __future__ import annotations
+import uuid
+
 from foundation.models import GalleryItem
+from django.conf import settings
 from django.db import IntegrityError
+from django.utils import timezone
 from rest_framework import generics, serializers, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from .serializers import StoryItemSerializer
 from .models import StoryItem 
+from .razorpay_client import (
+    RazorpayClient,
+    RazorpayCredentials,
+    RazorpayError,
+    verify_payment_signature,
+    verify_subscription_signature,
+)
 
 from foundation.models import (
     Article,
     Category,
     ContactSubmission,
+    Donation,
+    DonationPaymentLog,
     Homepage,
     HomepageSection,
     MagazineIssue,
@@ -461,6 +475,333 @@ class SubscriberCreateAPIView(generics.CreateAPIView):
                 name=serializer.validated_data.get("name", ""),
                 source=serializer.validated_data.get("source", ""),
             )
+
+
+class DonationCheckoutSerializer(serializers.Serializer):
+    donation_type = serializers.ChoiceField(choices=Donation.DonationType.choices)
+    amount = serializers.IntegerField(min_value=100)
+    currency = serializers.CharField(default="INR")
+    name = serializers.CharField(max_length=255)
+    email = serializers.EmailField()
+    phone = serializers.CharField(max_length=32)
+    payment_mode = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    message = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+    def validate_currency(self, value):
+        if value.upper() != "INR":
+            raise serializers.ValidationError("Only INR donations are supported right now.")
+        return value.upper()
+
+
+class DonationVerifySerializer(serializers.Serializer):
+    donation_id = serializers.IntegerField()
+    donation_type = serializers.ChoiceField(choices=Donation.DonationType.choices)
+    razorpay_payment_id = serializers.CharField(max_length=80)
+    razorpay_signature = serializers.CharField(max_length=255)
+    razorpay_order_id = serializers.CharField(max_length=80, required=False, allow_blank=True)
+    razorpay_subscription_id = serializers.CharField(max_length=80, required=False, allow_blank=True)
+
+
+def get_razorpay_client() -> RazorpayClient:
+    if not settings.RAZORPAY_KEY_ID or not settings.RAZORPAY_KEY_SECRET:
+        raise ValidationError("Razorpay is not configured on the server.")
+    return RazorpayClient(
+        RazorpayCredentials(
+            key_id=settings.RAZORPAY_KEY_ID,
+            key_secret=settings.RAZORPAY_KEY_SECRET,
+        )
+    )
+
+
+def create_donation_log(
+    donation: Donation,
+    event_type: str,
+    message: str,
+    payload: dict | None = None,
+):
+    DonationPaymentLog.objects.create(
+        donation=donation,
+        event_type=event_type,
+        status_snapshot=donation.status,
+        message=message,
+        payload=payload or {},
+    )
+
+
+class DonationCheckoutAPIView(generics.GenericAPIView):
+    serializer_class = DonationCheckoutSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        donation = Donation.objects.create(
+            donor_name=data["name"],
+            donor_email=data["email"],
+            donor_phone=data["phone"],
+            amount=data["amount"],
+            currency=data["currency"],
+            donation_type=data["donation_type"],
+            payment_mode_preference=data.get("payment_mode", ""),
+            message=data.get("message") or "",
+            receipt=f"don_{uuid.uuid4().hex[:18]}",
+            notes={"source": "website", "payment_mode": data.get("payment_mode", "")},
+        )
+        create_donation_log(
+            donation,
+            DonationPaymentLog.EventType.CREATED,
+            "Donation record created.",
+            {
+                "amount": donation.amount,
+                "currency": donation.currency,
+                "donation_type": donation.donation_type,
+                "payment_mode_preference": donation.payment_mode_preference,
+            },
+        )
+
+        try:
+            client = get_razorpay_client()
+            amount_paise = donation.amount * 100
+            common_notes = {
+                "donation_id": str(donation.id),
+                "donor_name": donation.donor_name,
+                "donor_email": donation.donor_email,
+                "donation_type": donation.donation_type,
+            }
+            create_donation_log(
+                donation,
+                DonationPaymentLog.EventType.CHECKOUT_REQUESTED,
+                "Razorpay checkout creation requested.",
+                common_notes,
+            )
+
+            if donation.donation_type == Donation.DonationType.ONE_TIME:
+                order = client.create_order(
+                    {
+                        "amount": amount_paise,
+                        "currency": donation.currency,
+                        "receipt": donation.receipt,
+                        "notes": common_notes,
+                    }
+                )
+                donation.razorpay_order_id = order.get("id", "")
+                donation.razorpay_status = order.get("status", "")
+                donation.status = Donation.Status.CHECKOUT_CREATED
+                donation.save(update_fields=["razorpay_order_id", "razorpay_status", "status", "updated_at"])
+                create_donation_log(
+                    donation,
+                    DonationPaymentLog.EventType.ORDER_CREATED,
+                    "Razorpay order created.",
+                    order,
+                )
+
+                return Response(
+                    {
+                        "checkout_type": "one_time",
+                        "donation_id": donation.id,
+                        "key": settings.RAZORPAY_KEY_ID,
+                        "amount": amount_paise,
+                        "currency": donation.currency,
+                        "order_id": donation.razorpay_order_id,
+                        "name": settings.RAZORPAY_DONATION_BRAND,
+                        "description": "One-time donation",
+                        "prefill": {
+                            "name": donation.donor_name,
+                            "email": donation.donor_email,
+                            "contact": donation.donor_phone,
+                        },
+                    }
+                )
+
+            plan = client.create_plan(
+                {
+                    "period": "monthly",
+                    "interval": 1,
+                    "item": {
+                        "name": f"Monthly Donation - Rs {donation.amount}",
+                        "amount": amount_paise,
+                        "currency": donation.currency,
+                        "description": f"Recurring monthly donation by {donation.donor_name}",
+                    },
+                    "notes": common_notes,
+                }
+            )
+            create_donation_log(
+                donation,
+                DonationPaymentLog.EventType.PLAN_CREATED,
+                "Razorpay monthly plan created.",
+                plan,
+            )
+            subscription = client.create_subscription(
+                {
+                    "plan_id": plan.get("id"),
+                    "customer_notify": 1,
+                    "quantity": 1,
+                    "total_count": 120,
+                    "notes": common_notes,
+                }
+            )
+            donation.razorpay_plan_id = plan.get("id", "")
+            donation.razorpay_subscription_id = subscription.get("id", "")
+            donation.razorpay_status = subscription.get("status", "")
+            donation.status = Donation.Status.CHECKOUT_CREATED
+            donation.save(
+                update_fields=[
+                    "razorpay_plan_id",
+                    "razorpay_subscription_id",
+                    "razorpay_status",
+                    "status",
+                    "updated_at",
+                ]
+            )
+            create_donation_log(
+                donation,
+                DonationPaymentLog.EventType.SUBSCRIPTION_CREATED,
+                "Razorpay subscription created.",
+                subscription,
+            )
+
+            return Response(
+                {
+                    "checkout_type": "monthly",
+                    "donation_id": donation.id,
+                    "key": settings.RAZORPAY_KEY_ID,
+                    "amount": amount_paise,
+                    "currency": donation.currency,
+                    "subscription_id": donation.razorpay_subscription_id,
+                    "name": settings.RAZORPAY_DONATION_BRAND,
+                    "description": "Monthly auto-debit donation",
+                    "prefill": {
+                        "name": donation.donor_name,
+                        "email": donation.donor_email,
+                        "contact": donation.donor_phone,
+                    },
+                }
+            )
+        except (RazorpayError, ValidationError) as exc:
+            donation.status = Donation.Status.FAILED
+            donation.notes = {**donation.notes, "error": str(exc)}
+            donation.save(update_fields=["status", "notes", "updated_at"])
+            create_donation_log(
+                donation,
+                DonationPaymentLog.EventType.FAILED,
+                "Checkout creation failed.",
+                {"error": str(exc)},
+            )
+            if isinstance(exc, ValidationError):
+                raise
+            raise ValidationError(str(exc))
+
+
+class DonationVerifyAPIView(generics.GenericAPIView):
+    serializer_class = DonationVerifySerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        donation = Donation.objects.filter(id=data["donation_id"]).first()
+        if not donation:
+            raise ValidationError("Donation session not found.")
+
+        if data["donation_type"] != donation.donation_type:
+            raise ValidationError("Donation type mismatch.")
+
+        signature = data["razorpay_signature"]
+        payment_id = data["razorpay_payment_id"]
+        create_donation_log(
+            donation,
+            DonationPaymentLog.EventType.VERIFY_REQUESTED,
+            "Payment verification requested.",
+            {
+                "donation_type": data["donation_type"],
+                "razorpay_payment_id": payment_id,
+                "razorpay_order_id": data.get("razorpay_order_id", ""),
+                "razorpay_subscription_id": data.get("razorpay_subscription_id", ""),
+            },
+        )
+
+        if donation.donation_type == Donation.DonationType.ONE_TIME:
+            order_id = data.get("razorpay_order_id") or donation.razorpay_order_id
+            if not order_id:
+                raise ValidationError("Missing order id.")
+            is_valid = verify_payment_signature(
+                settings.RAZORPAY_KEY_SECRET,
+                order_id,
+                payment_id,
+                signature,
+            )
+            if not is_valid:
+                donation.status = Donation.Status.FAILED
+                donation.save(update_fields=["status", "updated_at"])
+                create_donation_log(
+                    donation,
+                    DonationPaymentLog.EventType.FAILED,
+                    "Payment signature verification failed.",
+                    {"razorpay_payment_id": payment_id, "razorpay_order_id": order_id},
+                )
+                raise ValidationError("Payment signature verification failed.")
+
+            donation.razorpay_order_id = order_id
+            donation.status = Donation.Status.PAID
+        else:
+            subscription_id = data.get("razorpay_subscription_id") or donation.razorpay_subscription_id
+            if not subscription_id:
+                raise ValidationError("Missing subscription id.")
+            is_valid = verify_subscription_signature(
+                settings.RAZORPAY_KEY_SECRET,
+                payment_id,
+                subscription_id,
+                signature,
+            )
+            if not is_valid:
+                donation.status = Donation.Status.FAILED
+                donation.save(update_fields=["status", "updated_at"])
+                create_donation_log(
+                    donation,
+                    DonationPaymentLog.EventType.FAILED,
+                    "Subscription signature verification failed.",
+                    {"razorpay_payment_id": payment_id, "razorpay_subscription_id": subscription_id},
+                )
+                raise ValidationError("Subscription signature verification failed.")
+
+            donation.razorpay_subscription_id = subscription_id
+            donation.status = Donation.Status.SUBSCRIPTION_AUTHORIZED
+
+        donation.razorpay_payment_id = payment_id
+        donation.razorpay_signature = signature
+        donation.verified_at = timezone.now()
+        donation.save(
+            update_fields=[
+                "razorpay_order_id",
+                "razorpay_subscription_id",
+                "razorpay_payment_id",
+                "razorpay_signature",
+                "verified_at",
+                "status",
+                "updated_at",
+            ]
+        )
+        create_donation_log(
+            donation,
+            DonationPaymentLog.EventType.VERIFIED,
+            "Payment verified successfully.",
+            {
+                "razorpay_payment_id": donation.razorpay_payment_id,
+                "razorpay_order_id": donation.razorpay_order_id,
+                "razorpay_subscription_id": donation.razorpay_subscription_id,
+                "status": donation.status,
+            },
+        )
+        return Response(
+            {
+                "detail": "Payment verified successfully.",
+                "status": donation.status,
+                "donation_id": donation.id,
+            }
+        )
 
 class StoryItemViewSet(ModelViewSet):
     queryset = StoryItem.objects.filter(is_active=True).order_by("sort_order")

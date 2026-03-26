@@ -64,7 +64,7 @@ const RecentProjectsContent = ({
   return (
     <div
       ref={contentRef}
-      className={`recent-projects-content ${introOpen ? "mt-[150px]" : ""}`}
+      className="recent-projects-content"
     >
       <motion.div
         aria-hidden

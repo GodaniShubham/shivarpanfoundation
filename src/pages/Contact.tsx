@@ -350,7 +350,7 @@ const Contact = () => {
                 <div className="xl:col-span-8">
                   <iframe
                     title="Shivarpan Foundation Location Map"
-                    src="https://www.openstreetmap.org/export/embed.html?bbox=72.75%2C18.88%2C73.00%2C19.16&layer=mapnik&marker=19.0760%2C72.8777"
+                    src="https://www.openstreetmap.org/export/embed.html?bbox=72.5147%2C23.0031%2C72.5347%2C23.0231&layer=mapnik&marker=23.0131%2C72.5247"
                     className="h-[340px] w-full md:h-[380px]"
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"

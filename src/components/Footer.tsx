@@ -14,8 +14,28 @@ import { aboutContent } from "@/data/siteContent";
 
 const Footer = () => {
   return (
-    <footer className="bg-foreground text-primary-foreground">
-      <div className="container mx-auto px-4 py-16">
+    <footer className="relative overflow-hidden bg-foreground text-primary-foreground">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 top-0 opacity-90"
+      >
+        <div className="absolute -bottom-10 left-[-4%] h-56 w-56 rounded-full bg-accent/10 blur-3xl" />
+        <div className="absolute bottom-8 right-[6%] h-48 w-48 rounded-full bg-primary/15 blur-3xl" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-[linear-gradient(180deg,transparent_0%,hsl(var(--foreground))_100%)]" />
+        <div className="absolute bottom-0 left-4 leading-none text-[clamp(2.8rem,9vw,7rem)] font-black uppercase tracking-[0.18em] text-primary-foreground/[0.05]">
+          hope
+        </div>
+        <div className="absolute bottom-0 left-1/3 leading-none text-[clamp(2.2rem,7vw,5.6rem)] font-black uppercase tracking-[0.22em] text-accent/10">
+          care
+        </div>
+        <div className="absolute bottom-0 right-6 leading-none text-[clamp(2.6rem,8vw,6.5rem)] font-black uppercase tracking-[0.2em] text-primary/15">
+          uplift
+        </div>
+        <div className="absolute bottom-2 left-[12%] h-16 w-16 rounded-full border border-primary-foreground/10" />
+        <div className="absolute bottom-4 right-[20%] h-10 w-24 rounded-full border border-accent/20" />
+      </div>
+
+      <div className="container relative z-10 mx-auto px-4 py-16">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-6">
           <div className="lg:col-span-2">
             <div className="mb-4 inline-flex rounded-xl bg-primary-foreground p-2 shadow-md">
@@ -145,7 +165,7 @@ const Footer = () => {
         </div>
       </div>
 
-      <div className="border-t border-primary-foreground/10">
+      <div className="relative z-10 border-t border-primary-foreground/10">
         <div className="container mx-auto flex flex-col items-center justify-between gap-3 px-4 py-5 md:flex-row">
           <p className="text-xs opacity-50">
             (c) 2026 Shivarpan Charitable Foundation. All rights reserved.
