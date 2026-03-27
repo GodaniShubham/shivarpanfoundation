@@ -84,8 +84,8 @@ JAZZMIN_SETTINGS = {
     "user_avatar": None,
     # Bootswatch themes: https://bootswatch.com/ (Jazzmin supports multiple)
     "theme": "lux",
-    "dark_mode_theme": "cyborg",
-    "show_ui_builder": True,
+    "dark_mode_theme": None,
+    "show_ui_builder": False,
     "navigation_expanded": True,
     "related_modal_active": False,
     "changeform_format": "horizontal_tabs",
@@ -108,7 +108,7 @@ JAZZMIN_SETTINGS = {
 
 JAZZMIN_UI_TWEAKS = {
     "theme": "lux",
-    "dark_mode_theme": "cyborg",
+    "dark_mode_theme": None,
     "navbar": "navbar-dark navbar-primary",
     "navbar_fixed": True,
     "footer_fixed": False,
