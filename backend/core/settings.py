@@ -3,9 +3,17 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import importlib.util
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
+
+
+def env_list(name: str, default: list[str] | None = None) -> list[str]:
+    raw_value = os.environ.get(name, "")
+    if raw_value:
+        return [item.strip() for item in raw_value.split(",") if item.strip()]
+    return list(default or [])
 
 
 def load_env_file(path: Path) -> None:
@@ -32,6 +40,7 @@ load_env_file(BASE_DIR / ".env")
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret-key-change-me")
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "1") not in {"0", "false", "False"}
+USE_WHITENOISE = importlib.util.find_spec("whitenoise") is not None
 
 TINYMCE_API_KEY = os.environ.get("TINYMCE_API_KEY", "")
 
@@ -129,6 +138,9 @@ MIDDLEWARE = [
     "core.middleware.AnalyticsMiddleware",
 ]
 
+if USE_WHITENOISE:
+    MIDDLEWARE.insert(2, "whitenoise.middleware.WhiteNoiseMiddleware")
+
 ROOT_URLCONF = "core.urls"
 
 # -------------------------------------------------
@@ -189,6 +201,9 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "foundation" / "static"]
 
+if USE_WHITENOISE:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 # -------------------------------------------------
 # MEDIA FILES (Images, uploads)
 # -------------------------------------------------
@@ -216,7 +231,7 @@ REST_FRAMEWORK = {
 # -------------------------------------------------
 # CORS SETTINGS (Frontend → Django API)
 # -------------------------------------------------
-CORS_ALLOWED_ORIGINS = [
+default_cors_origins = [
     "http://localhost:8080",
     "http://127.0.0.1:8080",
     "http://localhost:5173",
@@ -225,12 +240,24 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
+CORS_ALLOWED_ORIGINS = env_list(
+    "DJANGO_CORS_ALLOWED_ORIGINS",
+    default_cors_origins if DEBUG else [],
+)
+
 CORS_ALLOW_CREDENTIALS = True
 
 # -------------------------------------------------
 # CSRF (for POST requests from frontend)
 # -------------------------------------------------
-CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
+CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", CORS_ALLOWED_ORIGINS)
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # -------------------------------------------------
 # RAZORPAY
