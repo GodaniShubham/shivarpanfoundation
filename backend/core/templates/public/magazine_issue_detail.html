@@ -1,0 +1,33 @@
+{% extends "public/base.html" %}
+
+{% block title %}{{ issue.seo_title|default:issue.title }}{% endblock %}
+{% block meta_description %}{{ issue.seo_description|default:site_settings.default_meta_description }}{% endblock %}
+
+{% block content %}
+  <main class="wrap">
+    <div class="muted"><a href="/magazine/" style="text-decoration:none;">Magazine</a> /</div>
+    <h1 style="margin: 10px 0 8px;">{{ issue.title }}</h1>
+    {% if issue.cover_image and issue.cover_image.file %}
+      <img src="{{ issue.cover_image.file.url }}" alt="{{ issue.cover_image.alt_text|default:issue.title }}" />
+      <div style="height: 10px;"></div>
+    {% endif %}
+    {% if issue.description %}<div class="muted">{{ issue.description|safe }}</div>{% endif %}
+
+    <h2 style="margin: 22px 0 12px;">Stories</h2>
+    <div class="grid">
+      {% for s in stories %}
+        <article class="card">
+          {% if s.featured_image and s.featured_image.file %}
+            <a href="/magazine/story/{{ s.slug }}/"><img src="{{ s.featured_image.file.url }}" alt="{{ s.featured_image.alt_text|default:s.title }}" /></a>
+            <div style="height: 10px;"></div>
+          {% endif %}
+          <h3 style="margin: 0 0 6px;"><a href="/magazine/story/{{ s.slug }}/" style="text-decoration:none;">{{ s.title }}</a></h3>
+          {% if s.excerpt %}<div class="muted">{{ s.excerpt }}</div>{% endif %}
+        </article>
+      {% empty %}
+        <div class="card">No stories yet.</div>
+      {% endfor %}
+    </div>
+  </main>
+{% endblock %}
+

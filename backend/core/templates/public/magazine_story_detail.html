@@ -1,0 +1,20 @@
+{% extends "public/base.html" %}
+
+{% block title %}{{ story.seo_title|default:story.title }}{% endblock %}
+{% block meta_description %}{{ story.seo_description|default:story.excerpt|default:site_settings.default_meta_description }}{% endblock %}
+
+{% block content %}
+  <main class="wrap">
+    <div class="muted"><a href="/magazine/" style="text-decoration:none;">Magazine</a> /</div>
+    <h1 style="margin: 10px 0 8px;">{{ story.title }}</h1>
+    <div class="muted" style="margin-bottom: 10px;">
+      {{ story.publish_at }}{% if story.author_name %} · {{ story.author_name }}{% endif %}
+    </div>
+    {% if story.featured_image and story.featured_image.file %}
+      <img src="{{ story.featured_image.file.url }}" alt="{{ story.featured_image.alt_text|default:story.title }}" />
+      <div style="height: 10px;"></div>
+    {% endif %}
+    <div>{{ story.body|safe }}</div>
+  </main>
+{% endblock %}
+

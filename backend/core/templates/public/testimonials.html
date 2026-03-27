@@ -1,0 +1,27 @@
+{% extends "public/base.html" %}
+
+{% block title %}Testimonials{% endblock %}
+
+{% block content %}
+  <main class="wrap">
+    <h1 style="margin: 14px 0 12px;">Testimonials</h1>
+    <div class="grid">
+      {% for t in testimonials %}
+        <article class="card">
+          {% if t.photo and t.photo.file %}
+            <img src="{{ t.photo.file.url }}" alt="{{ t.photo.alt_text|default:t.name }}" />
+            <div style="height: 10px;"></div>
+          {% endif %}
+          <h3 style="margin: 0 0 6px;">{{ t.name }}</h3>
+          <div class="muted" style="margin-bottom: 10px;">
+            {{ t.designation }}{% if t.organization %} · {{ t.organization }}{% endif %}
+          </div>
+          <div>“{{ t.quote }}”</div>
+        </article>
+      {% empty %}
+        <div class="card">No testimonials yet.</div>
+      {% endfor %}
+    </div>
+  </main>
+{% endblock %}
+

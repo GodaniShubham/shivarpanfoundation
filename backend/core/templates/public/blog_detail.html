@@ -1,0 +1,27 @@
+{% extends "public/base.html" %}
+
+{% block title %}{{ article.seo_title|default:article.title }}{% endblock %}
+{% block meta_description %}{{ article.seo_description|default:article.excerpt|default:site_settings.default_meta_description }}{% endblock %}
+
+{% block meta_extra %}
+  {% if article.og_title %}<meta property="og:title" content="{{ article.og_title }}" />{% endif %}
+  {% if article.og_description %}<meta property="og:description" content="{{ article.og_description }}" />{% endif %}
+  {% if article.og_image and article.og_image.file %}<meta property="og:image" content="{{ article.og_image.file.url }}" />{% endif %}
+  {% if article.canonical_url %}<link rel="canonical" href="{{ article.canonical_url }}" />{% endif %}
+{% endblock %}
+
+{% block content %}
+  <main class="wrap">
+    <div class="muted"><a href="/blog/" style="text-decoration:none;">Blog</a> /</div>
+    <h1 style="margin: 10px 0 8px;">{{ article.title }}</h1>
+    <div class="muted" style="margin-bottom: 10px;">
+      {{ article.publish_at }}{% if article.author_name %} · {{ article.author_name }}{% endif %}
+    </div>
+    {% if article.featured_image and article.featured_image.file %}
+      <img src="{{ article.featured_image.file.url }}" alt="{{ article.featured_image.alt_text|default:article.title }}" />
+      <div style="height: 10px;"></div>
+    {% endif %}
+    <div>{{ article.body|safe }}</div>
+  </main>
+{% endblock %}
+

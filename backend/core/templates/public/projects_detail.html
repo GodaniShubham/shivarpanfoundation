@@ -1,0 +1,42 @@
+{% extends "public/base.html" %}
+
+{% block title %}{{ project.seo_title|default:project.title }}{% endblock %}
+{% block meta_description %}{{ project.seo_description|default:project.summary|default:site_settings.default_meta_description }}{% endblock %}
+
+{% block meta_extra %}
+  {% if project.og_title %}<meta property="og:title" content="{{ project.og_title }}" />{% endif %}
+  {% if project.og_description %}<meta property="og:description" content="{{ project.og_description }}" />{% endif %}
+  {% if project.og_image and project.og_image.file %}<meta property="og:image" content="{{ project.og_image.file.url }}" />{% endif %}
+  {% if project.canonical_url %}<link rel="canonical" href="{{ project.canonical_url }}" />{% endif %}
+{% endblock %}
+
+{% block content %}
+  <main class="wrap">
+    <div class="muted"><a href="/projects/" style="text-decoration:none;">Projects</a> /</div>
+    <h1 style="margin: 10px 0 8px;">{{ project.title }}</h1>
+    {% if project.partner_organization %}<div class="muted" style="margin-bottom: 10px;">{{ project.partner_organization }}</div>{% endif %}
+    {% if project.featured_image and project.featured_image.file %}
+      <img src="{{ project.featured_image.file.url }}" alt="{{ project.featured_image.alt_text|default:project.title }}" />
+      <div style="height: 10px;"></div>
+    {% endif %}
+    {% if project.summary %}<div class="muted" style="margin-bottom: 10px;">{{ project.summary }}</div>{% endif %}
+    <div>{{ project.description|safe }}</div>
+
+    {% if project.impact_numbers %}
+      <h2 style="margin: 22px 0 10px;">Impact</h2>
+      <div class="card">
+        <pre style="margin:0; white-space: pre-wrap;">{{ project.impact_numbers }}</pre>
+      </div>
+    {% endif %}
+
+    {% if project.gallery.all %}
+      <h2 style="margin: 22px 0 10px;">Gallery</h2>
+      <div class="grid">
+        {% for img in project.gallery.all %}
+          {% if img.file %}<img src="{{ img.file.url }}" alt="{{ img.alt_text|default:img.title }}" />{% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </main>
+{% endblock %}
+

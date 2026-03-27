@@ -1,0 +1,25 @@
+{% extends "public/base.html" %}
+
+{% block title %}Projects{% endblock %}
+
+{% block content %}
+  <main class="wrap">
+    <h1 style="margin: 14px 0 12px;">Projects</h1>
+    <div class="grid">
+      {% for p in projects %}
+        <article class="card">
+          {% if p.featured_image and p.featured_image.file %}
+            <a href="/projects/{{ p.slug }}/"><img src="{{ p.featured_image.file.url }}" alt="{{ p.featured_image.alt_text|default:p.title }}" /></a>
+            <div style="height: 10px;"></div>
+          {% endif %}
+          <h3 style="margin: 0 0 6px;"><a href="/projects/{{ p.slug }}/" style="text-decoration:none;">{{ p.title }}</a></h3>
+          {% if p.partner_organization %}<div class="muted">{{ p.partner_organization }}</div>{% endif %}
+          {% if p.summary %}<div class="muted" style="margin-top: 10px;">{{ p.summary }}</div>{% endif %}
+        </article>
+      {% empty %}
+        <div class="card">No published projects yet.</div>
+      {% endfor %}
+    </div>
+  </main>
+{% endblock %}
+

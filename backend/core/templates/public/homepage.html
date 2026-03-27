@@ -1,0 +1,74 @@
+{% extends "public/base.html" %}
+
+{% block title %}{{ homepage.hero_title|default:site_settings.default_meta_title|default:"Homepage" }}{% endblock %}
+{% block meta_description %}{{ homepage.hero_subtitle|default:site_settings.default_meta_description }}{% endblock %}
+
+{% block content %}
+  <section
+    style="
+      padding: 64px 0;
+      color: white;
+      background:
+        {% if homepage.hero_background_image and homepage.hero_background_image.file %}
+          linear-gradient(180deg, rgba(11,18,32,0.92), rgba(11,18,32,0.60)),
+          url('{{ homepage.hero_background_image.file.url }}');
+          background-size: cover;
+          background-position: center;
+        {% else %}
+          linear-gradient(180deg, rgba(11,18,32,0.92), rgba(11,18,32,0.60));
+        {% endif %}
+    "
+  >
+    <div class="wrap">
+      <h1 style="margin: 0 0 10px 0; font-size: 44px; line-height: 1.05;">{{ homepage.hero_title }}</h1>
+      <p style="margin: 0 0 18px 0; font-size: 18px; color: rgba(255,255,255,0.82);">{{ homepage.hero_subtitle }}</p>
+      {% if homepage.hero_cta_url %}
+        <a class="cta" href="{{ homepage.hero_cta_url }}">{{ homepage.hero_cta_text|default:"Learn more" }}</a>
+      {% endif %}
+    </div>
+  </section>
+
+  <main class="wrap">
+    {% if partner_logos %}
+      <h2 style="margin: 18px 0 10px;">Partners</h2>
+      <div style="display:flex; gap: 12px; flex-wrap: wrap; align-items:center;">
+        {% for logo in partner_logos %}
+          {% if logo.file %}
+            <img
+              src="{{ logo.file.url }}"
+              alt="{{ logo.alt_text|default:logo.title }}"
+              style="width: 84px; height: 84px; object-fit: contain; background: #fff; padding: 10px; border: 1px solid #e5e7eb;"
+            />
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if sections %}
+      <h2 style="margin: 28px 0 12px;">Sections</h2>
+      <div class="grid">
+        {% for s in sections %}
+          <article class="card">
+            {% if s.image and s.image.file %}
+              <img src="{{ s.image.file.url }}" alt="{{ s.image.alt_text|default:s.title }}" />
+              <div style="height: 10px;"></div>
+            {% endif %}
+            <h3 style="margin: 0 0 6px 0;">{{ s.title }}</h3>
+            {% if s.body %}
+              <div class="muted">{{ s.body|safe }}</div>
+            {% endif %}
+            {% if s.embed_html %}
+              <div style="margin-top: 10px;">{{ s.embed_html|safe }}</div>
+            {% endif %}
+            {% if s.button_url %}
+              <div style="margin-top: 12px;">
+                <a class="cta" style="background:#111827" href="{{ s.button_url }}">{{ s.button_text|default:"Open" }}</a>
+              </div>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </main>
+{% endblock %}
+
