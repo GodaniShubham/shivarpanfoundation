@@ -94,7 +94,7 @@ JAZZMIN_SETTINGS = {
     "login_logo": "img/shivarpan-logo-square.png",
     "site_icon": "img/shivarpan-logo-square.png",
     "site_logo_classes": "brand-image",
-    "custom_css": "admin/custom.css",
+    "custom_css": "admin/custom.css?v=20260327",
     "topmenu_links": [
         {"name": "View Site", "url": "/", "new_window": True},
     ],
