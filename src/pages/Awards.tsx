@@ -8,6 +8,7 @@ import aboutHero from "@/assets/about-hero.png";
 import campaignEducation from "@/assets/campaign-education.jpg";
 import campaignHealth from "@/assets/campaign-health.jpg";
 import campaignEnvironment from "@/assets/campaign-environment.jpg";
+import { apiUrl, assetUrl } from "@/lib/api";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -132,24 +133,19 @@ const Awards = () => {
   const previewRightRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const normalizeUrl = (url?: string) => {
-      if (!url) return "";
-      return url.startsWith("http") ? url : `http://127.0.0.1:8000${url}`;
-    };
-
     axios
-      .get("http://127.0.0.1:8000/api/awards/")
+      .get(apiUrl("awards/"))
       .then((res) => {
         const items = Array.isArray(res.data) ? res.data : [];
         const formatted = items
           .map((item: any, index: number) => {
-            const imageUrl = normalizeUrl(item?.image?.url);
+            const imageUrl = assetUrl(item?.image?.url);
             if (!imageUrl) {
               return null;
             }
             const detailImages = Array.isArray(item?.detail_images)
               ? item.detail_images
-                  .map((img: any) => normalizeUrl(img?.url))
+                  .map((img: any) => assetUrl(img?.url))
                   .filter(Boolean)
               : [];
             return {

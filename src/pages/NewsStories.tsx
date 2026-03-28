@@ -16,6 +16,7 @@
   import { ArrowUpRight, Calendar, Clock3, MapPin, Sparkles } from "lucide-react";
   import { Badge } from "@/components/ui/badge";
   import { useIsMobile } from "@/hooks/use-mobile";
+  import { apiUrl, assetUrl } from "@/lib/api";
   import aboutHero from "@/assets/about-hero.png";
   import campaignFood from "@/assets/campaign-food.jpg";
   import campaignEducation from "@/assets/campaign-education.jpg";
@@ -233,15 +234,13 @@
       return heroImages[(imageIndex - 1) % heroImages.length];
     };
   useEffect(() => {
-    axios.get("http://127.0.0.1:8000/api/story-items/")
+    axios.get(apiUrl("story-items/"))
       .then((res) => {
         const formatted = res.data.map((item: any) => ({
           id: item.id,
           title: item.title,
           category: item.category || "Story",
-          image: item.image.startsWith("http")
-    ? item.image
-    : `http://127.0.0.1:8000${item.image}`,
+          image: assetUrl(item.image),
           alt: item.title,
           metric: "Impact",
           summary: item.description || "Story summary",
@@ -254,12 +253,10 @@
   }, []);
 
   useEffect(() => {
-    axios.get("http://127.0.0.1:8000/api/story-items/")
+    axios.get(apiUrl("story-items/"))
       .then((res) => {
         const formatted = res.data.map((item: any) => ({
-          image: item.image.startsWith("http")
-    ? item.image
-    : `http://127.0.0.1:8000${item.image}`,
+          image: assetUrl(item.image),
           alt: item.title || "Hero Image",
         }));
         console.log("HERO DATA:", res.data);
@@ -313,15 +310,13 @@
     const [storiesData, setStoriesData] = useState<Story[]>([]);
     useEffect(() => {
       
-    axios.get("http://127.0.0.1:8000/api/story-items/")
+    axios.get(apiUrl("story-items/"))
       .then((res) => {
         console.log("API STORIES:", res.data);
 
         const formatted = res.data.map((item: any) => ({
           title: item.title,
-          image: item.image.startsWith("http")
-    ? item.image
-    : `http://127.0.0.1:8000${item.image}`, // 🔥 IMPORTANT
+          image: assetUrl(item.image),
           date: item.date || "Mar 2026",
           location: item.location || "India",
           readTime: "3 min read",

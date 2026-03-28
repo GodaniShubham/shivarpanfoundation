@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { podcastEpisodes } from "@/data/podcastEpisodes";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
+import { apiUrl, assetUrl } from "@/lib/api";
 
 type EpisodeWithMeta = (typeof podcastEpisodes)[number] & {
   category: string;
@@ -32,18 +33,13 @@ const Podcast = () => {
   const [episodes, setEpisodes] = useState(podcastEpisodes);
 
   useEffect(() => {
-    const normalizeUrl = (url?: string) => {
-      if (!url) return "";
-      return url.startsWith("http") ? url : `http://127.0.0.1:8000${url}`;
-    };
-
     axios
-      .get("http://127.0.0.1:8000/api/podcast/episodes/")
+      .get(apiUrl("podcast/episodes/"))
       .then((res) => {
         const items = Array.isArray(res.data) ? res.data : [];
         const formatted = items
           .map((item: any, index: number) => {
-            const imageUrl = normalizeUrl(item?.cover_image?.url);
+            const imageUrl = assetUrl(item?.cover_image?.url);
             if (!imageUrl) return null;
             return {
               id: item?.id ?? index + 1,

@@ -5,9 +5,22 @@ const rawBaseUrl =
     ?.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api";
 
 export const API_BASE_URL = rawBaseUrl.replace(/\/+$/, "");
+export const API_ORIGIN = API_BASE_URL.replace(/\/api(?:\/.*)?$/, "").replace(/\/+$/, "");
 
 export const apiUrl = (path: string) =>
   `${API_BASE_URL}/${path.replace(/^\/+/, "")}`;
+
+export const assetUrl = (path?: string | null) => {
+  if (!path) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+
+  return `${API_ORIGIN}/${path.replace(/^\/+/, "")}`;
+};
 
 function extractErrorMessage(data: unknown): string {
   if (Array.isArray(data) && data.length > 0) {

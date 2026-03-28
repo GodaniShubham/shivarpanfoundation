@@ -208,7 +208,7 @@ if USE_WHITENOISE:
 # MEDIA FILES (Images, uploads)
 # -------------------------------------------------
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = Path(os.environ.get("DJANGO_MEDIA_ROOT", str(BASE_DIR / "media")))
 
 # -------------------------------------------------
 # DEFAULT PRIMARY KEY

@@ -5,6 +5,7 @@ import { ArrowLeft, Clock3, Mic, PlayCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import { apiUrl, assetUrl } from "@/lib/api";
 
 const PodcastEpisode = () => {
   const { episodeSlug } = useParams();
@@ -21,21 +22,16 @@ const PodcastEpisode = () => {
   }, [episodeSlug]);
 
   useEffect(() => {
-    const normalizeUrl = (url?: string) => {
-      if (!url) return "";
-      return url.startsWith("http") ? url : `http://127.0.0.1:8000${url}`;
-    };
-
     if (!episodeSlug) {
       return;
     }
 
     axios
-      .get("http://127.0.0.1:8000/api/podcast/episodes/")
+      .get(apiUrl("podcast/episodes/"))
       .then((res) => {
         const items = Array.isArray(res.data) ? res.data : [];
         const formatted = items.map((item: any, index: number) => {
-          const imageUrl = normalizeUrl(item?.cover_image?.url);
+          const imageUrl = assetUrl(item?.cover_image?.url);
           return {
             id: item?.id ?? index + 1,
             slug: item?.slug ?? `episode-${index + 1}`,
@@ -55,7 +51,7 @@ const PodcastEpisode = () => {
         if (!matched) {
           return;
         }
-        const imageUrl = normalizeUrl(matched?.cover_image?.url);
+        const imageUrl = assetUrl(matched?.cover_image?.url);
         const nextEpisode = {
           id: matched?.id ?? 0,
           slug: matched?.slug ?? episodeSlug,

@@ -33,7 +33,7 @@ import adrsKLogo from "@/assets/ADRSK.png";
 import shivarpanLogo from "@/assets/shivarpan-logo.jpeg";
 import hotelLogo from "@/assets/hotel.png";
 import { aboutContent, homeHeroContent } from "@/data/siteContent";
-import { getJson } from "@/lib/api";
+import { assetUrl, getJson } from "@/lib/api";
 
 const heroStats = [
   { value: "500+", label: "Lives Transformed" },
@@ -327,11 +327,6 @@ const Index = () => {
   const [storyItems, setStoryItems] = useState<StoryItemPayload[]>([]);
   const [projectItems, setProjectItems] = useState<ProjectPayload[]>([]);
 
-  const normalizeUrl = (url?: string | null) => {
-    if (!url) return "";
-    return url.startsWith("http") ? url : `http://127.0.0.1:8000${url}`;
-  };
-
   useEffect(() => {
     let isMounted = true;
 
@@ -364,7 +359,7 @@ const Index = () => {
           setGalleryItems(
             data.map((item) => ({
               ...item,
-              image: normalizeUrl(item.image),
+              image: assetUrl(item.image),
             })),
           );
         }
@@ -380,7 +375,7 @@ const Index = () => {
           setStoryItems(
             data.map((item) => ({
               ...item,
-              image: normalizeUrl(item.image),
+              image: assetUrl(item.image),
             })),
           );
         }

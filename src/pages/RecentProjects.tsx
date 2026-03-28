@@ -5,6 +5,7 @@ import { Flip } from "gsap/Flip";
 import RecentProjectsContent from "@/components/recent-projects/RecentProjectsContent";
 import RecentProjectsIntro from "@/components/recent-projects/RecentProjectsIntro";
 import { recentProjects } from "@/data/recentProjects";
+import { apiUrl, assetUrl } from "@/lib/api";
 
 gsap.registerPlugin(Flip);
 
@@ -22,7 +23,7 @@ const RecentProjects = () => {
 
   useEffect(() => {
     axios
-      .get("http://127.0.0.1:8000/api/projects/")
+      .get(apiUrl("projects/"))
       .then((res) => {
         console.log("PROJECT IMAGES:", res.data);
 
@@ -31,9 +32,7 @@ const RecentProjects = () => {
           .map((item: any) => {
             const rawUrl = item?.featured_image?.url;
             if (!rawUrl) return null;
-            const image = rawUrl.startsWith("http")
-              ? rawUrl
-              : `http://127.0.0.1:8000${rawUrl}`;
+            const image = assetUrl(rawUrl);
             if (item?.slug) {
               imageMap[item.slug] = image;
             } else if (item?.title) {

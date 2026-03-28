@@ -3,6 +3,7 @@ import { Sparkles } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import AnimatedSection from "@/components/AnimatedSection";
 import { useEffect, useState } from "react";
+import { apiUrl, assetUrl } from "@/lib/api";
 
 const tileClassByIndex = [
   "sm:col-span-2 lg:col-span-2 lg:row-span-2",
@@ -22,11 +23,16 @@ const Gallery = ({ heroTitle, heroSubtitle, heroImage }) => {
   const [activeTag, setActiveTag] = useState("All");
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/gallery/")
+    fetch(apiUrl("gallery/"))
       .then((res) => res.json())
       .then((data) => {
         console.log("API DATA:", data);
-        setGalleryItems(data);
+        setGalleryItems(
+          data.map((item) => ({
+            ...item,
+            image: assetUrl(item.image),
+          })),
+        );
       })
       .catch((err) => console.error(err));
   }, []);
