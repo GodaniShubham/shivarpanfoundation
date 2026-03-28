@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { HashRouter, Route, Routes, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import LoadingScreen from "./components/LoadingScreen";
@@ -82,10 +82,10 @@ const App = () => {
         {showLoader ? (
           <LoadingScreen onComplete={() => setShowLoader(false)} />
         ) : (
-          <BrowserRouter>
+          <HashRouter>
             <UpcomingEventPopup />
             <AppRoutes />
-          </BrowserRouter>
+          </HashRouter>
         )}
       </TooltipProvider>
     </QueryClientProvider>

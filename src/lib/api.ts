@@ -1,8 +1,27 @@
 type JsonRecord = Record<string, unknown>;
 
+const deriveFallbackBaseUrl = () => {
+  if (typeof window === "undefined") {
+    return "http://127.0.0.1:8000/api";
+  }
+
+  const { hostname, protocol } = window.location;
+
+  if (hostname === "shivarpan-foundation.onrender.com") {
+    return "https://shivarpan-foundation-backend.onrender.com/api";
+  }
+
+  if (hostname.endsWith(".onrender.com") && !hostname.includes("-backend.")) {
+    const derivedHost = hostname.replace(".onrender.com", "-backend.onrender.com");
+    return `${protocol}//${derivedHost}/api`;
+  }
+
+  return "http://127.0.0.1:8000/api";
+};
+
 const rawBaseUrl =
   (import.meta as unknown as { env?: Record<string, string> }).env
-    ?.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api";
+    ?.VITE_API_BASE_URL ?? deriveFallbackBaseUrl();
 
 export const API_BASE_URL = rawBaseUrl.replace(/\/+$/, "");
 export const API_ORIGIN = API_BASE_URL.replace(/\/api(?:\/.*)?$/, "").replace(/\/+$/, "");
