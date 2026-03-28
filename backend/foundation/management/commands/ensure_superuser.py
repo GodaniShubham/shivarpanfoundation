@@ -4,6 +4,7 @@ import os
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 
 
 class Command(BaseCommand):
@@ -24,20 +25,25 @@ class Command(BaseCommand):
             return
 
         user_model = get_user_model()
-        user, created = user_model.objects.get_or_create(
-            username=username,
-            defaults={
-                "email": email,
-                "is_staff": True,
-                "is_superuser": True,
-            },
-        )
+        user = user_model.objects.filter(Q(username=username) | Q(email=email)).first()
+        created = user is None
+
+        if user is None:
+            user = user_model(username=username, email=email)
 
         updated_fields: list[str] = []
+
+        if user.username != username:
+            user.username = username
+            updated_fields.append("username")
 
         if user.email != email:
             user.email = email
             updated_fields.append("email")
+
+        if not user.is_active:
+            user.is_active = True
+            updated_fields.append("is_active")
 
         if not user.is_staff:
             user.is_staff = True
@@ -49,7 +55,10 @@ class Command(BaseCommand):
 
         user.set_password(password)
         updated_fields.append("password")
-        user.save(update_fields=updated_fields)
+        if created:
+            user.save()
+        else:
+            user.save(update_fields=updated_fields)
 
         message = (
             f"Created superuser '{username}'."

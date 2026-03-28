@@ -4,7 +4,7 @@ services:
     runtime: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt && python manage.py migrate && python manage.py ensure_superuser && python manage.py collectstatic --noinput
-    startCommand: gunicorn core.wsgi:application --bind 0.0.0.0:$PORT
+    startCommand: python manage.py migrate && python manage.py ensure_superuser && gunicorn core.wsgi:application --bind 0.0.0.0:$PORT
     plan: free
     envVars:
       - key: PYTHON_VERSION
