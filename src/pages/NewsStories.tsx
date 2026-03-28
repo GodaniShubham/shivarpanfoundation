@@ -74,6 +74,14 @@
     },
   ];
 
+  const fallbackHeroImages = [
+    aboutHero,
+    campaignFood,
+    campaignEducation,
+    campaignHealth,
+    campaignEnvironment,
+  ];
+
 
 
 
@@ -227,7 +235,7 @@
     const getHeroMedia = (imageIndex: number) => {
     if (!heroImages || heroImages.length === 0) {
     return {
-      image: "https://via.placeholder.com/300",
+      image: fallbackHeroImages[(imageIndex - 1) % fallbackHeroImages.length],
       alt: "fallback"
     };
   }
@@ -259,7 +267,6 @@
           image: assetUrl(item.image),
           alt: item.title || "Hero Image",
         }));
-        console.log("HERO DATA:", res.data);
 
         setHeroImages(formatted);
       })
@@ -312,8 +319,6 @@
       
     axios.get(apiUrl("story-items/"))
       .then((res) => {
-        console.log("API STORIES:", res.data);
-
         const formatted = res.data.map((item: any) => ({
           title: item.title,
           image: assetUrl(item.image),
@@ -502,7 +507,6 @@
             <div ref={heroGridRef} className="stories-codrops-grid">
           {heroGridItems.map((item, index) => {
     const media = getHeroMedia(item.imageIndex);
-  console.log("MEDIA:", media);
 
     if (!media) return null;
 

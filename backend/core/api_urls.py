@@ -14,6 +14,7 @@ from foundation.api import (
     HomepageAPIView,
     MagazineIssueViewSet,
     MagazineStoryViewSet,
+    MediaAssetFileAPIView,
     MediaAssetViewSet,
     PageViewSet,
     PodcastEpisodeViewSet,
@@ -40,6 +41,7 @@ router.register(r"story-items", StoryItemViewSet, basename="story-item")
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("media-assets/<int:pk>/file/", MediaAssetFileAPIView.as_view(), name="mediaasset-file"),
     path("homepage/", HomepageAPIView.as_view(), name="homepage"),
     path("contact/", ContactSubmissionCreateAPIView.as_view(), name="contact-submit"),
     path("newsletter/subscribe/", SubscriberCreateAPIView.as_view(), name="newsletter-subscribe"),

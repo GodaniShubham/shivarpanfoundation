@@ -4,6 +4,7 @@ import uuid
 from foundation.models import GalleryItem
 from django.conf import settings
 from django.db import IntegrityError
+from django.http import Http404, HttpResponse
 from django.utils import timezone
 from rest_framework import generics, serializers, viewsets
 from rest_framework.decorators import action
@@ -51,17 +52,9 @@ class MediaAssetSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "alt_text", "media_type", "url", "created_at"]
 
     def get_url(self, obj):
-        if not getattr(obj, "file", None):
+        if not getattr(obj, "file", None) and not obj.file_blob:
             return ""
-        try:
-            relative = obj.file.url
-        except Exception:
-            return ""
-
-        request = self.context.get("request")
-        if request:
-            return request.build_absolute_uri(relative)
-        return relative
+        return obj.public_url(self.context.get("request"))
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -206,8 +199,8 @@ class GalleryItemSerializer(serializers.ModelSerializer):
 
     def get_image(self, obj):
         request = self.context.get("request")
-        if obj.image and obj.image.file:
-            return request.build_absolute_uri(obj.image.file.url)
+        if obj.image:
+            return obj.image.public_url(request)
         return None
 
 
@@ -344,6 +337,32 @@ class MediaAssetViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = MediaAsset.objects.order_by("-created_at")
     serializer_class = MediaAssetSerializer
     filterset_fields = ["media_type"]
+
+
+class MediaAssetFileAPIView(generics.GenericAPIView):
+    queryset = MediaAsset.objects.all()
+
+    def get(self, request, pk: int):
+        asset = self.get_queryset().filter(pk=pk).first()
+        if not asset:
+            raise Http404("Media asset not found.")
+
+        if asset.file_blob:
+            response = HttpResponse(
+                asset.file_blob,
+                content_type=asset.content_type or "application/octet-stream",
+            )
+            filename = asset.file_name or f"media-{asset.pk}"
+            response["Content-Disposition"] = f'inline; filename="{filename}"'
+            return response
+
+        if asset.file:
+            try:
+                return Response({"url": request.build_absolute_uri(asset.file.url)})
+            except Exception as exc:
+                raise Http404("Media file not found.") from exc
+
+        raise Http404("Media file not found.")
 
 
 class PageViewSet(PublicPublishedOnlyMixin, viewsets.ReadOnlyModelViewSet):

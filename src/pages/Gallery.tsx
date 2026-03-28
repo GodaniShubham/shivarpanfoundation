@@ -4,6 +4,7 @@ import PageHero from "@/components/PageHero";
 import AnimatedSection from "@/components/AnimatedSection";
 import { useEffect, useState } from "react";
 import { apiUrl, assetUrl } from "@/lib/api";
+import campaignFood from "@/assets/campaign-food.jpg";
 
 const tileClassByIndex = [
   "sm:col-span-2 lg:col-span-2 lg:row-span-2",
@@ -26,7 +27,6 @@ const Gallery = ({ heroTitle, heroSubtitle, heroImage }) => {
     fetch(apiUrl("gallery/"))
       .then((res) => res.json())
       .then((data) => {
-        console.log("API DATA:", data);
         setGalleryItems(
           data.map((item) => ({
             ...item,
@@ -100,6 +100,9 @@ const Gallery = ({ heroTitle, heroSubtitle, heroImage }) => {
                 <img
                   src={item.image}
                   alt={item.title}
+                  onError={(event) => {
+                    event.currentTarget.src = campaignFood;
+                  }}
                   className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
                 />
 

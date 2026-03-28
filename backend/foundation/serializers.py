@@ -9,6 +9,7 @@ class StoryItemSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "image", "sort_order"]
 
     def get_image(self, obj):
-        if obj.image and obj.image.file:
-          return obj.image.file.url
+        request = self.context.get("request")
+        if obj.image:
+          return obj.image.public_url(request)
         return None

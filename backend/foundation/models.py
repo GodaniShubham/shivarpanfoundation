@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 
 
@@ -46,6 +47,9 @@ class MediaAsset(TimeStampedModel):
 
     title = models.CharField(max_length=255, blank=True)
     file = models.FileField(upload_to="uploads/%Y/%m/")
+    file_name = models.CharField(max_length=255, blank=True)
+    content_type = models.CharField(max_length=100, blank=True)
+    file_blob = models.BinaryField(blank=True, null=True, editable=False)
     alt_text = models.CharField(max_length=255, blank=True)
     media_type = models.CharField(max_length=20, choices=MediaType.choices, default=MediaType.OTHER)
 
@@ -55,6 +59,21 @@ class MediaAsset(TimeStampedModel):
     def save(self, *args, **kwargs):
         if self.file and self.file.name:
             name = self.file.name.lower()
+            self.file_name = self.file.name.rsplit("/", 1)[-1]
+
+            uploaded_file = getattr(self.file, "file", None)
+            if uploaded_file and hasattr(uploaded_file, "read"):
+                try:
+                    uploaded_file.seek(0)
+                except Exception:
+                    pass
+                self.file_blob = uploaded_file.read()
+                try:
+                    uploaded_file.seek(0)
+                except Exception:
+                    pass
+
+            self.content_type = getattr(self.file, "content_type", "") or self.content_type
             if name.endswith((".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")):
                 self.media_type = self.MediaType.IMAGE
             elif name.endswith((".mp4", ".mov", ".webm", ".mkv")):
@@ -66,6 +85,21 @@ class MediaAsset(TimeStampedModel):
             else:
                 self.media_type = self.MediaType.OTHER
         return super().save(*args, **kwargs)
+
+    def public_url(self, request=None) -> str:
+        if self.file_blob:
+            relative = reverse("mediaasset-file", args=[self.pk])
+        elif self.file:
+            try:
+                relative = self.file.url
+            except Exception:
+                return ""
+        else:
+            return ""
+
+        if request:
+            return request.build_absolute_uri(relative)
+        return relative
 
 
 class SeoFields(models.Model):
