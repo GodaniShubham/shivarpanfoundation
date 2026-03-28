@@ -55,7 +55,5 @@ Recommended backend env vars:
 - `DJANGO_ALLOWED_HOSTS=<your-backend-domain>`
 - `DJANGO_CORS_ALLOWED_ORIGINS=https://<your-frontend-domain>`
 - `DJANGO_CSRF_TRUSTED_ORIGINS=https://<your-frontend-domain>`
-- `DJANGO_DB_PATH=/var/data/db.sqlite3`
-- `DJANGO_MEDIA_ROOT=/var/data/media`
 
-If you keep SQLite and uploaded media on Render, attach a persistent disk and use the above paths.
+For a temporary no-disk deployment, keep `backend/media` and `backend/db.sqlite3` inside the repo and let Django serve `/media/` directly.

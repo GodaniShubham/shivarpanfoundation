@@ -6,10 +6,6 @@ services:
     buildCommand: pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput
     startCommand: gunicorn core.wsgi:application --bind 0.0.0.0:$PORT
     plan: free
-    disk:
-      name: shivarpan-data
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.11
@@ -23,10 +19,6 @@ services:
         value: https://shivarpan-frontend.onrender.com
       - key: DJANGO_CSRF_TRUSTED_ORIGINS
         value: https://shivarpan-frontend.onrender.com
-      - key: DJANGO_DB_PATH
-        value: /var/data/db.sqlite3
-      - key: DJANGO_MEDIA_ROOT
-        value: /var/data/media
 
   - type: web
     name: shivarpan-frontend

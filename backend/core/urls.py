@@ -58,10 +58,8 @@ urlpatterns = [
     path("<slug:slug>/", page_detail, name="page-detail"),
 ]
 
-
-# Serve media files during development
-if settings.DEBUG:
-    urlpatterns += static(
-        settings.MEDIA_URL,
-        document_root=settings.MEDIA_ROOT
-    )
+# Temporary Render-friendly media serving without a separate disk/storage layer.
+urlpatterns += static(
+    settings.MEDIA_URL,
+    document_root=settings.MEDIA_ROOT
+)
