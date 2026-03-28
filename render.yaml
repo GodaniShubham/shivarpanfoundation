@@ -3,7 +3,7 @@ services:
     name: shivarpan-backend
     runtime: python
     rootDir: backend
-    buildCommand: pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput
+    buildCommand: pip install -r requirements.txt && python manage.py migrate && python manage.py ensure_superuser && python manage.py collectstatic --noinput
     startCommand: gunicorn core.wsgi:application --bind 0.0.0.0:$PORT
     plan: free
     envVars:
@@ -19,6 +19,12 @@ services:
         value: https://shivarpan-frontend.onrender.com
       - key: DJANGO_CSRF_TRUSTED_ORIGINS
         value: https://shivarpan-frontend.onrender.com
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: admin
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: admin@example.com
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
 
   - type: web
     name: shivarpan-frontend

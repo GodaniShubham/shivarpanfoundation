@@ -45,7 +45,7 @@ The included `render.yaml` contains the recommended defaults for both services.
 ### Backend
 
 - Root directory: `backend`
-- Build command: `pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput`
+- Build command: `pip install -r requirements.txt && python manage.py migrate && python manage.py ensure_superuser && python manage.py collectstatic --noinput`
 - Start command: `gunicorn core.wsgi:application --bind 0.0.0.0:$PORT`
 
 Recommended backend env vars:
@@ -55,5 +55,8 @@ Recommended backend env vars:
 - `DJANGO_ALLOWED_HOSTS=<your-backend-domain>`
 - `DJANGO_CORS_ALLOWED_ORIGINS=https://<your-frontend-domain>`
 - `DJANGO_CSRF_TRUSTED_ORIGINS=https://<your-frontend-domain>`
+- `DJANGO_SUPERUSER_USERNAME=<admin-username>`
+- `DJANGO_SUPERUSER_EMAIL=<admin-email>`
+- `DJANGO_SUPERUSER_PASSWORD=<admin-password>`
 
 For a temporary no-disk deployment, keep `backend/media` and `backend/db.sqlite3` inside the repo and let Django serve `/media/` directly.
