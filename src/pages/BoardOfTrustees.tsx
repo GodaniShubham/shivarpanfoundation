@@ -7,16 +7,18 @@ import vaishnaviSaxenaPhoto from "@/assets/vaishnavi saxena.webp";
 
 const trustees = [
   {
-    name: "Deepak Sharma",
-    role: "Chairperson",
+    name: "Deepak Kumar Sharma",
+    role: "Founder and Managing Director",
     initials: "DS",
     photo: deepakSharmaPhoto,
+    label: "Leadership",
   },
   {
     name: "Vaishnavi Saxena",
     role: "Trustee",
     initials: "VS",
     photo: vaishnaviSaxenaPhoto,
+    label: "Trustee",
   },
 ];
 
@@ -161,7 +163,7 @@ const BoardOfTrustees = () => (
                   whileHover={{ y: -1 }}
                   className="mt-3 inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary"
                 >
-                  Trustee
+                  {member.label}
                 </motion.span>
               </motion.div>
             </AnimatedSection>

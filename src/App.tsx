@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { HashRouter, Route, Routes, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import FloatingWhatsAppButton from "./components/FloatingWhatsAppButton";
 import LoadingScreen from "./components/LoadingScreen";
 import UpcomingEventPopup from "./components/UpcomingEventPopup";
 import Index from "./pages/Index";
@@ -34,6 +35,8 @@ const queryClient = new QueryClient();
 const AppRoutes = () => {
   const location = useLocation();
   const isMagazineViewer = /^\/e-magazine-articles\/[^/]+$/.test(location.pathname);
+  const isAdminPanel = location.pathname === "/admin-panel";
+  const shouldShowFloatingWhatsApp = !isMagazineViewer && !isAdminPanel;
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -66,6 +69,7 @@ const AppRoutes = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+      {shouldShowFloatingWhatsApp && <FloatingWhatsAppButton />}
       {!isMagazineViewer && <Footer />}
     </>
   );
