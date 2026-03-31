@@ -94,7 +94,7 @@ JAZZMIN_SETTINGS = {
     "login_logo": "img/shivarpan-logo-square.png",
     "site_icon": "img/shivarpan-logo-square.png",
     "site_logo_classes": "brand-image",
-    "custom_css": "admin/custom.css?v=20260327",
+    "custom_css": "admin/custom.css",
     "topmenu_links": [
         {"name": "View Site", "url": "/", "new_window": True},
     ],
@@ -216,7 +216,6 @@ USE_TZ = True
 # -------------------------------------------------
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [BASE_DIR / "foundation" / "static"]
 
 if USE_WHITENOISE:
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
