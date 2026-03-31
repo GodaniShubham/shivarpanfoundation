@@ -15,6 +15,11 @@ export interface AboutContent {
   quickAccessDescription: string;
 }
 
+export interface OrganizationIdentifier {
+  label: string;
+  value: string;
+}
+
 export interface LegalSection {
   heading: string;
   paragraphs: string[];
@@ -60,6 +65,17 @@ export const aboutContent: AboutContent = {
   quickAccessDescription:
     "Purpose-driven programs, trusted partnerships, and measurable community impact.",
 };
+
+export const organizationIdentifiers: OrganizationIdentifier[] = [
+  {
+    label: "CIN No.",
+    value: "U85499GJ2025NPL157634",
+  },
+  {
+    label: "PAN No.",
+    value: "ABOCS9547E",
+  },
+];
 
 export const privacyPolicyContent: LegalDocument = {
   title: "Privacy Policy",

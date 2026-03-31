@@ -10,7 +10,7 @@ import {
   Linkedin,
 } from "lucide-react";
 import shivarpanLogo from "@/assets/shivarpan-logo.jpeg";
-import { aboutContent } from "@/data/siteContent";
+import { aboutContent, organizationIdentifiers } from "@/data/siteContent";
 
 const Footer = () => {
   return (
@@ -161,6 +161,38 @@ const Footer = () => {
                 <span>info@shivarpanfoundation.org</span>
               </li>
             </ul>
+          </div>
+        </div>
+
+        <div className="mt-10 rounded-[1.75rem] border border-primary-foreground/10 bg-primary-foreground/[0.05] p-5 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.8)] backdrop-blur-sm md:p-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.34em] text-accent">
+                Registered Details
+              </p>
+              <h4 className="mt-2 font-display text-xl font-semibold text-primary-foreground">
+                Official registration and tax identification
+              </h4>
+              <p className="mt-2 text-sm leading-relaxed text-primary-foreground/65">
+                These details help donors, partners, and institutions verify the foundation's registered identity at a glance.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {organizationIdentifiers.map((item) => (
+                <div
+                  key={item.label}
+                  className="min-w-[220px] rounded-2xl border border-primary-foreground/10 bg-background/10 px-4 py-3"
+                >
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.26em] text-accent/90">
+                    {item.label}
+                  </p>
+                  <p className="mt-2 break-all font-mono text-sm font-semibold tracking-[0.16em] text-primary-foreground">
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
