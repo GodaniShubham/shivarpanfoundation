@@ -59,9 +59,9 @@ const Footer = () => {
         <img
           src={footerImage}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover object-[center_72%] sm:object-[center_68%] lg:object-[center_64%] opacity-[0.62] brightness-[1.02] contrast-[1.04] saturate-[1]"
+          className="absolute inset-0 h-full w-full object-cover object-[center_72%] sm:object-[center_68%] lg:object-[center_64%] opacity-[0.72] brightness-[1.06] contrast-[1.06] saturate-[1.02]"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,20,28,0.06)_0%,rgba(8,20,28,0.24)_22%,rgba(8,20,28,0.52)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,20,28,0.04)_0%,rgba(8,20,28,0.18)_22%,rgba(8,20,28,0.42)_100%)]" />
       </div>
 
       <div
@@ -206,12 +206,12 @@ const Footer = () => {
 
         <div className="mt-8 grid gap-5 border-t border-primary-foreground/10 pt-7 sm:mt-10 sm:gap-6 lg:grid-cols-[minmax(0,1.4fr)_auto] lg:items-center">
           <div className="rounded-[1.6rem] border border-white/12 bg-[linear-gradient(135deg,rgba(10,18,24,0.18),rgba(10,18,24,0.08))] p-5 backdrop-blur-[1px] sm:p-6">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.3em] text-accent">
+            <h3 className="font-display text-xl font-semibold text-[#ff9f43] sm:text-2xl">
               Registered Details
-            </p>
-            <h4 className="mt-3 font-display text-xl font-semibold text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.45)] sm:text-2xl">
+            </h3>
+            <p className="mt-2 text-sm font-medium leading-6 text-primary-foreground/76 sm:text-base">
               Verified foundation identity details
-            </h4>
+            </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {organizationIdentifiers.map((item) => (
                 <div
@@ -221,7 +221,7 @@ const Footer = () => {
                   <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-primary-foreground/72">
                     {item.label}
                   </p>
-                  <p className="mt-2 break-all font-mono text-[1rem] font-semibold tracking-[0.06em] text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.35)] sm:text-[1.12rem] lg:text-[1.22rem]">
+                  <p className="mt-2 break-all font-mono text-[1rem] font-semibold tracking-[0.06em] text-primary-foreground/92 drop-shadow-[0_1px_8px_rgba(0,0,0,0.2)] sm:text-[1.12rem] lg:text-[1.22rem]">
                     {item.value}
                   </p>
                 </div>
