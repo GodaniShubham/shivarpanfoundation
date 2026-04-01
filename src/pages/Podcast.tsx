@@ -12,8 +12,7 @@ import AnimatedSection from "@/components/AnimatedSection";
 import { useNavigate } from "react-router-dom";
 import { podcastEpisodes } from "@/data/podcastEpisodes";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import axios from "axios";
-import { apiUrl, assetUrl } from "@/lib/api";
+import { assetUrl, getJson } from "@/lib/api";
 
 type EpisodeWithMeta = (typeof podcastEpisodes)[number] & {
   category: string;
@@ -33,10 +32,9 @@ const Podcast = () => {
   const [episodes, setEpisodes] = useState(podcastEpisodes);
 
   useEffect(() => {
-    axios
-      .get(apiUrl("podcast/episodes/"))
+    getJson<any[]>("podcast/episodes/")
       .then((res) => {
-        const items = Array.isArray(res.data) ? res.data : [];
+        const items = Array.isArray(res) ? res : [];
         const formatted = items
           .map((item: any, index: number) => {
             const imageUrl = assetUrl(item?.cover_image?.url);
@@ -59,7 +57,7 @@ const Podcast = () => {
           setEpisodes(formatted as typeof podcastEpisodes);
         }
       })
-      .catch((err) => console.error(err));
+      .catch(() => undefined);
   }, []);
 
   const episodeCatalog = useMemo<EpisodeWithMeta[]>(

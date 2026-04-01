@@ -6,6 +6,7 @@ import {
   Leaf,
   MapPin,
   ShieldCheck,
+  Sparkles,
   Stethoscope,
   type LucideIcon,
 } from "lucide-react";
@@ -14,6 +15,7 @@ import campaignEducation from "@/assets/campaign-education.jpg";
 import campaignEnvironment from "@/assets/campaign-environment.jpg";
 import campaignFood from "@/assets/campaign-food.jpg";
 import campaignHealth from "@/assets/campaign-health.jpg";
+import { assetUrl } from "@/lib/api";
 
 export interface RecentProject {
   title: string;
@@ -31,6 +33,19 @@ export interface RecentProject {
   spent: number;
   objective: string;
   outcomes: string[];
+}
+
+export interface RecentProjectsApiItem {
+  id?: number;
+  title: string;
+  slug: string;
+  summary?: string;
+  description?: string;
+  partner_organization?: string;
+  impact_numbers?: Record<string, unknown> | null;
+  featured_image?: {
+    url?: string | null;
+  } | null;
 }
 
 export interface SectorSplit {
@@ -220,3 +235,210 @@ export const recentProjectsNumberFormat = new Intl.NumberFormat("en-IN");
 
 export const formatRecentProjectsInr = (value: number) =>
   `INR ${recentProjectsNumberFormat.format(value)}`;
+
+const recentProjectFallbackMap = new Map(
+  recentProjects.flatMap((project) => [
+    [project.slug, project],
+    [project.title.trim().toLowerCase(), project],
+  ]),
+);
+
+const getFallbackProject = (item: Pick<RecentProjectsApiItem, "slug" | "title">) =>
+  recentProjectFallbackMap.get(item.slug) ??
+  recentProjectFallbackMap.get(item.title.trim().toLowerCase()) ??
+  null;
+
+const readImpactString = (
+  impact: Record<string, unknown> | null | undefined,
+  ...keys: string[]
+) => {
+  if (!impact) {
+    return undefined;
+  }
+
+  for (const key of keys) {
+    const value = impact[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  return undefined;
+};
+
+const readImpactNumber = (
+  impact: Record<string, unknown> | null | undefined,
+  ...keys: string[]
+) => {
+  if (!impact) {
+    return undefined;
+  }
+
+  for (const key of keys) {
+    const value = impact[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === "string") {
+      const normalized = Number(
+        value.replace(/[^\d.-]/g, "").replace(/(?!^)-/g, "").trim(),
+      );
+      if (Number.isFinite(normalized)) {
+        return normalized;
+      }
+    }
+  }
+
+  return undefined;
+};
+
+const readImpactStringArray = (
+  impact: Record<string, unknown> | null | undefined,
+  ...keys: string[]
+) => {
+  if (!impact) {
+    return undefined;
+  }
+
+  for (const key of keys) {
+    const value = impact[key];
+    if (Array.isArray(value)) {
+      const items = value
+        .map((item) => (typeof item === "string" ? item.trim() : ""))
+        .filter(Boolean);
+
+      if (items.length > 0) {
+        return items;
+      }
+    }
+  }
+
+  return undefined;
+};
+
+const normalizeProjectStatus = (value?: string): RecentProject["status"] => {
+  if (!value) {
+    return "Active";
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (["completed", "complete", "closed", "done"].includes(normalized)) {
+    return "Completed";
+  }
+
+  return "Active";
+};
+
+const resolveProjectIcon = (focus?: string, fallbackIcon?: LucideIcon) => {
+  const normalized = focus?.trim().toLowerCase() ?? "";
+
+  if (normalized.includes("food") || normalized.includes("nutrition")) {
+    return HandHeart;
+  }
+  if (normalized.includes("education") || normalized.includes("scholar")) {
+    return BookOpenText;
+  }
+  if (normalized.includes("health") || normalized.includes("medical")) {
+    return Stethoscope;
+  }
+  if (
+    normalized.includes("environment") ||
+    normalized.includes("green") ||
+    normalized.includes("climate")
+  ) {
+    return Leaf;
+  }
+
+  return fallbackIcon ?? Sparkles;
+};
+
+export const mapRecentProjectsFromApi = (
+  items?: RecentProjectsApiItem[] | null,
+): RecentProject[] => {
+  if (!items || items.length === 0) {
+    return recentProjects;
+  }
+
+  return items.map((item) => {
+    const fallbackProject = getFallbackProject(item);
+    const impact = item.impact_numbers ?? {};
+    const focus =
+      readImpactString(impact, "focus", "category", "sector", "track") ??
+      fallbackProject?.focus ??
+      "Community Impact";
+    const status = normalizeProjectStatus(
+      readImpactString(impact, "status", "project_status", "state") ??
+        fallbackProject?.status,
+    );
+    const objective =
+      readImpactString(impact, "objective", "objective_text") ??
+      item.summary?.trim() ??
+      item.description?.trim() ??
+      fallbackProject?.objective ??
+      "";
+    const image = item.featured_image?.url?.trim()
+      ? assetUrl(item.featured_image.url)
+      : fallbackProject?.image || aboutHero;
+
+    return {
+      title: item.title,
+      slug: item.slug,
+      image,
+      icon: resolveProjectIcon(focus, fallbackProject?.icon),
+      focus,
+      status,
+      location:
+        readImpactString(impact, "location", "geography", "region") ??
+        fallbackProject?.location ??
+        "Field location to be updated",
+      timeline:
+        readImpactString(impact, "timeline", "duration", "date_range") ??
+        fallbackProject?.timeline ??
+        "Timeline to be updated",
+      beneficiaries:
+        readImpactNumber(impact, "beneficiaries", "people_reached", "reach") ??
+        fallbackProject?.beneficiaries ??
+        0,
+      volunteers:
+        readImpactNumber(impact, "volunteers", "volunteer_count") ??
+        fallbackProject?.volunteers ??
+        0,
+      partners:
+        readImpactNumber(impact, "partners", "partner_count", "delivery_partners") ??
+        fallbackProject?.partners ??
+        0,
+      budget:
+        readImpactNumber(impact, "budget", "target", "allocated_budget") ??
+        fallbackProject?.budget ??
+        0,
+      spent:
+        readImpactNumber(impact, "spent", "raised", "utilized", "deployed") ??
+        fallbackProject?.spent ??
+        0,
+      objective,
+      outcomes:
+        readImpactStringArray(impact, "outcomes", "highlights", "milestones") ??
+        fallbackProject?.outcomes ??
+        [],
+    };
+  });
+};
+
+export const findRecentProjectByIdentifier = (
+  projects: RecentProject[],
+  identifier: string | null | undefined,
+) => {
+  if (!identifier?.trim()) {
+    return null;
+  }
+
+  const normalizedIdentifier = identifier.trim().toLowerCase();
+
+  return (
+    projects.find((project) => project.slug === identifier.trim()) ??
+    projects.find(
+      (project) => project.title.trim().toLowerCase() === normalizedIdentifier,
+    ) ??
+    null
+  );
+};

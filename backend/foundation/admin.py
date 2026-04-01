@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.http import HttpResponse
 from django.utils import timezone
+from django.utils.html import format_html
 from .models import StoryItem
 
 from core.admin_site import admin_site
@@ -60,6 +61,45 @@ class RichTextAdminMixin:
                 if isinstance(widget, forms.Textarea):
                     widget.attrs["class"] = (widget.attrs.get("class", "") + " richtext").strip()
         return form
+
+
+class ProjectAdminForm(forms.ModelForm):
+    impact_numbers = forms.JSONField(
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "rows": 18,
+                "class": "vLargeTextField code",
+                "style": "font-family: ui-monospace, SFMono-Regular, Consolas, monospace;",
+                "placeholder": (
+                    '{\n'
+                    '  "focus": "Healthcare",\n'
+                    '  "status": "Active",\n'
+                    '  "location": "Nashik and Palghar Blocks",\n'
+                    '  "timeline": "Feb 2026 - Apr 2026",\n'
+                    '  "beneficiaries": 860,\n'
+                    '  "volunteers": 48,\n'
+                    '  "partners": 7,\n'
+                    '  "budget": 260000,\n'
+                    '  "spent": 252000,\n'
+                    '  "objective": "Expand access to preventive diagnostics.",\n'
+                    '  "outcomes": ["500+ patients screened", "Referral desk active"]\n'
+                    '}'
+                ),
+            }
+        ),
+        help_text=format_html(
+            "Recent Projects showcase uses this JSON dynamically. "
+            "Recommended keys: <code>focus</code>, <code>status</code>, <code>location</code>, "
+            "<code>timeline</code>, <code>beneficiaries</code>, <code>volunteers</code>, "
+            "<code>partners</code>, <code>budget</code>, <code>spent</code>, "
+            "<code>objective</code>, and <code>outcomes</code>."
+        ),
+    )
+
+    class Meta:
+        model = Project
+        fields = "__all__"
 
 
 @admin.register(MediaAsset, site=admin_site)
@@ -203,6 +243,7 @@ class PodcastEpisodeAdmin(RichTextAdminMixin, admin.ModelAdmin):
 
 @admin.register(Project, site=admin_site)
 class ProjectAdmin(RichTextAdminMixin, admin.ModelAdmin):
+    form = ProjectAdminForm
     rich_text_fields = ("description", "summary")
     list_display = ("title", "slug", "status", "publish_at", "updated_at")
     list_filter = ("status",)

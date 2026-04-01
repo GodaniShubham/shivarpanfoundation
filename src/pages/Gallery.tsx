@@ -3,7 +3,7 @@ import { Sparkles } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import AnimatedSection from "@/components/AnimatedSection";
 import { useEffect, useState } from "react";
-import { apiUrl, assetUrl } from "@/lib/api";
+import { assetUrl, getJson } from "@/lib/api";
 import campaignFood from "@/assets/campaign-food.jpg";
 
 const tileClassByIndex = [
@@ -24,8 +24,7 @@ const Gallery = ({ heroTitle, heroSubtitle, heroImage }) => {
   const [activeTag, setActiveTag] = useState("All");
 
   useEffect(() => {
-    fetch(apiUrl("gallery/"))
-      .then((res) => res.json())
+    getJson<any[]>("gallery/")
       .then((data) => {
         setGalleryItems(
           data.map((item) => ({
@@ -34,7 +33,7 @@ const Gallery = ({ heroTitle, heroSubtitle, heroImage }) => {
           })),
         );
       })
-      .catch((err) => console.error(err));
+      .catch(() => undefined);
   }, []);
 
   const filteredItems =

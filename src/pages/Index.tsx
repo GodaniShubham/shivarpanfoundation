@@ -33,7 +33,7 @@ import adrsKLogo from "@/assets/ADRSK.png";
 import shivarpanLogo from "@/assets/shivarpan-logo.jpeg";
 import hotelLogo from "@/assets/hotel.png";
 import { aboutContent, homeHeroContent } from "@/data/siteContent";
-import { assetUrl, getJson } from "@/lib/api";
+import { assetUrl, getJson, reportApiError } from "@/lib/api";
 
 const heroStats = [
   { value: "500+", label: "Lives Transformed" },
@@ -337,7 +337,7 @@ const Index = () => {
           setHomepage(data);
         }
       } catch (error) {
-        console.error("Homepage API error", error);
+        reportApiError("Homepage API error", error);
       }
     };
 
@@ -348,7 +348,7 @@ const Index = () => {
           setTestimonialItems(data);
         }
       } catch (error) {
-        console.error("Testimonials API error", error);
+        reportApiError("Testimonials API error", error);
       }
     };
 
@@ -364,7 +364,7 @@ const Index = () => {
           );
         }
       } catch (error) {
-        console.error("Gallery API error", error);
+        reportApiError("Gallery API error", error);
       }
     };
 
@@ -380,7 +380,7 @@ const Index = () => {
           );
         }
       } catch (error) {
-        console.error("Story items API error", error);
+        reportApiError("Story items API error", error);
       }
     };
 
@@ -391,7 +391,7 @@ const Index = () => {
           setProjectItems(data);
         }
       } catch (error) {
-        console.error("Projects API error", error);
+        reportApiError("Projects API error", error);
       }
     };
 

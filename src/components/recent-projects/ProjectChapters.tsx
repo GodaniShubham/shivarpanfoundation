@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
-import { Calendar, CheckCircle2, MapPin } from "lucide-react";
+import { Calendar, CheckCircle2, Heart, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   formatRecentProjectsInr,
   recentProjectsNumberFormat,
@@ -187,6 +189,28 @@ const ProjectChapters = ({ projects }: ProjectChaptersProps) => (
                         <span>{outcome}</span>
                       </p>
                     ))}
+                  </div>
+
+                  <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] border border-primary/15 bg-primary/5 p-4">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+                        Support This Project
+                      </p>
+                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                        {isCompleted
+                          ? "Contribute to keep similar impact cycles funded and ready for the next chapter."
+                          : "Donate directly for this active project and help the team close the remaining gap faster."}
+                      </p>
+                    </div>
+                    <Button
+                      asChild
+                      className="bg-primary text-primary-foreground shadow-[0_18px_45px_-32px_hsl(var(--primary))] hover:bg-primary/90"
+                    >
+                      <Link to={`/donate-now?project=${encodeURIComponent(project.slug)}`}>
+                        <Heart className="h-4 w-4" />
+                        {isCompleted ? "Support Similar Work" : "Donate to This Project"}
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               </div>

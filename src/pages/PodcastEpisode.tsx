@@ -4,8 +4,7 @@ import { podcastEpisodes } from "@/data/podcastEpisodes";
 import { ArrowLeft, Clock3, Mic, PlayCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
-import { apiUrl, assetUrl } from "@/lib/api";
+import { assetUrl, getJson } from "@/lib/api";
 
 const PodcastEpisode = () => {
   const { episodeSlug } = useParams();
@@ -26,10 +25,9 @@ const PodcastEpisode = () => {
       return;
     }
 
-    axios
-      .get(apiUrl("podcast/episodes/"))
+    getJson<any[]>("podcast/episodes/")
       .then((res) => {
-        const items = Array.isArray(res.data) ? res.data : [];
+        const items = Array.isArray(res) ? res : [];
         const formatted = items.map((item: any, index: number) => {
           const imageUrl = assetUrl(item?.cover_image?.url);
           return {
@@ -65,9 +63,7 @@ const PodcastEpisode = () => {
         };
         setEpisode(nextEpisode);
       })
-      .catch((err) => {
-        console.error(err);
-      });
+      .catch(() => undefined);
   }, [episodeSlug]);
 
   if (!episode) {

@@ -54,12 +54,12 @@ const Footer = () => {
     <footer className="relative overflow-hidden bg-foreground text-primary-foreground">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 top-[434px] sm:top-[364px] lg:top-[334px]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 top-[95rem] sm:top-[364px] lg:top-[334px]"
       >
         <img
           src={footerImage}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover object-[center_72%] sm:object-[center_68%] lg:object-[center_64%] opacity-[0.72] brightness-[1.06] contrast-[1.06] saturate-[1.02]"
+          className="absolute inset-0 h-full w-full object-cover object-[center_82%] sm:object-[center_68%] lg:object-[center_64%] opacity-[0.72] brightness-[1.06] contrast-[1.06] saturate-[1.02]"
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,20,28,0.04)_0%,rgba(8,20,28,0.18)_22%,rgba(8,20,28,0.42)_100%)]" />
       </div>

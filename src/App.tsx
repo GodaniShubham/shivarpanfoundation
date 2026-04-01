@@ -52,7 +52,7 @@ const AppRoutes = () => {
           <Route path="/gallery" element={<DynamicPage slug="gallery" fallback={<Gallery />} />} />
           <Route path="/news-stories" element={<DynamicPage slug="news-stories" fallback={<NewsStories />} />} />
           <Route path="/recent-projects" element={<DynamicPage slug="recent-projects" fallback={<RecentProjects />} />} />
-          <Route path="/awards" element={<DynamicPage slug="awards" fallback={<Awards />} />} />
+          <Route path="/awards" element={<Awards />} />
           <Route path="/podcast" element={<DynamicPage slug="podcast" fallback={<Podcast />} />} />
           <Route path="/podcast/:episodeSlug" element={<PodcastEpisode />} />
           <Route path="/contact" element={<DynamicPage slug="contact" fallback={<Contact />} />} />
@@ -86,7 +86,12 @@ const App = () => {
         {showLoader ? (
           <LoadingScreen onComplete={() => setShowLoader(false)} />
         ) : (
-          <HashRouter>
+          <HashRouter
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true,
+            }}
+          >
             <UpcomingEventPopup />
             <AppRoutes />
           </HashRouter>

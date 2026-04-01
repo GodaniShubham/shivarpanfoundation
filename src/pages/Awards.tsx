@@ -1,14 +1,22 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import axios from "axios";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ArrowRight, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  CalendarDays,
+  MapPin,
+  Sparkles,
+  Trophy,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import AnimatedSection from "@/components/AnimatedSection";
 import campaignFood from "@/assets/campaign-food.jpg";
 import aboutHero from "@/assets/about-hero.png";
 import campaignEducation from "@/assets/campaign-education.jpg";
 import campaignHealth from "@/assets/campaign-health.jpg";
 import campaignEnvironment from "@/assets/campaign-environment.jpg";
-import { apiUrl, assetUrl } from "@/lib/api";
+import { assetUrl, getJson } from "@/lib/api";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -26,6 +34,18 @@ interface PreviewController {
   setProduct: (product: HTMLElement | null) => void;
   onResize: () => void;
   kill: () => void;
+}
+
+interface UpcomingAward {
+  id: string;
+  title: string;
+  presenter: string;
+  date: string;
+  location: string;
+  summary: string;
+  image: string;
+  cta: string;
+  shellClass: string;
 }
 
 const heroKineticLines = [
@@ -114,6 +134,48 @@ const fallbackAwards: AwardRecognition[] = [
   },
 ];
 
+const upcomingAwards: UpcomingAward[] = [
+  {
+    id: "ua-01",
+    title: "Made In India Excellence Awards 2026",
+    presenter: "Presented by Shivarpan Foundation",
+    date: "Tuesday, 7 Dec 2026",
+    location: "Pune, MH, India",
+    summary:
+      "A high-energy honors showcase built to spark anticipation, spotlight bold achievements, and make the audience feel something major is on the way.",
+    image: campaignFood,
+    cta: "Nominate Now",
+    shellClass:
+      "from-black via-[#17120a] to-[#7a4b00]",
+  },
+  {
+    id: "ua-02",
+    title: "Gujarat Udyogak Gaurav Puraskar 2026",
+    presenter: "Presented by Shivarpan Foundation",
+    date: "13/12/2026",
+    location: "Ahmedabad, GJ, India",
+    summary:
+      "A rich showcase for standout leadership, bold ambition, and the kind of stage presence that feels worthy of a major public reveal.",
+    image: campaignEnvironment,
+    cta: "Apply Now",
+    shellClass:
+      "from-[#1b1200] via-[#7b5a12] to-[#f2a532]",
+  },
+  {
+    id: "ua-03",
+    title: "National Teachers Awards 2026",
+    presenter: "Presented by Shivarpan Foundation",
+    date: "Saturday, 13 Dec 2026",
+    location: "Ahmedabad, GJ, India",
+    summary:
+      "An audience-facing honors format designed to celebrate excellence with theatrical visuals, prestige cues, and a strong nomination call-to-action.",
+    image: campaignEducation,
+    cta: "Nominate Now",
+    shellClass:
+      "from-[#12051d] via-[#3b1463] to-[#d3a200]",
+  },
+];
+
 const Awards = () => {
   const [awardRecognitions, setAwardRecognitions] = useState<AwardRecognition[]>(fallbackAwards);
   const [experienceStarted, setExperienceStarted] = useState(false);
@@ -133,10 +195,9 @@ const Awards = () => {
   const previewRightRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    axios
-      .get(apiUrl("awards/"))
+    getJson<any[]>("awards/")
       .then((res) => {
-        const items = Array.isArray(res.data) ? res.data : [];
+        const items = Array.isArray(res) ? res : [];
         const formatted = items
           .map((item: any, index: number) => {
             const imageUrl = assetUrl(item?.image?.url);
@@ -164,9 +225,7 @@ const Awards = () => {
           setAwardRecognitions(formatted);
         }
       })
-      .catch((err) => {
-        console.error(err);
-      });
+      .catch(() => undefined);
   }, []);
 
   const parallaxSlides = useMemo(
@@ -743,6 +802,96 @@ const Awards = () => {
 
       {experienceStarted && (
         <section ref={experienceSectionRef} className="awards-v3-experience">
+          <section className="relative overflow-hidden px-4 pb-8 pt-10 sm:px-6 lg:px-8">
+            <div className="mx-auto w-full max-w-[1280px]">
+              <AnimatedSection className="mb-8 text-center">
+                <p className="text-sm font-semibold uppercase tracking-widest text-accent">
+                  Upcoming Awards
+                </p>
+                <h2 className="mt-2 font-display text-4xl font-bold leading-[0.9] text-white sm:text-5xl lg:text-[4.6rem]">
+                  Big award nights coming next.
+                </h2>
+                <p className="mx-auto mt-3 max-w-3xl text-sm leading-relaxed text-white/68 sm:text-base">
+                  A sharper preview of the next award showcases we want people to anticipate,
+                  nominate for, and talk about.
+                </p>
+              </AnimatedSection>
+
+              <div className="grid gap-5 lg:grid-cols-3 lg:items-stretch">
+                {upcomingAwards.map((award, index) => (
+                  <AnimatedSection key={award.id} delay={index * 0.08} className="h-full">
+                    <article className="group relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] shadow-[0_24px_80px_-56px_rgba(0,0,0,0.95)] backdrop-blur-md">
+                      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${award.shellClass} opacity-30`} />
+
+                      <div className="relative overflow-hidden border-b border-white/10">
+                        <img
+                          src={award.image}
+                          alt={award.title}
+                          className="h-[22rem] w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                        />
+                        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08)_0%,rgba(0,0,0,0.12)_32%,rgba(0,0,0,0.52)_100%)]" />
+                        <div className="absolute left-4 right-4 top-4 flex items-center justify-between gap-3">
+                          <span className="rounded-full border border-white/18 bg-black/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/88 backdrop-blur-sm">
+                            {award.presenter}
+                          </span>
+                          <span className="rounded-full border border-[#ffcf67]/30 bg-[#ffcf67]/16 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#ffe08a]">
+                            2026
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="relative flex flex-1 flex-col p-5">
+                        <div className="min-h-[5.5rem]">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#ffd978]">
+                            Upcoming Award
+                          </p>
+                          <h3 className="mt-2 max-w-[12ch] font-display text-[2.15rem] font-bold leading-[0.9] text-white sm:text-[2.35rem]">
+                            {award.title}
+                          </h3>
+                          <div className="mt-3 h-px w-24 bg-gradient-to-r from-[#ffd978] via-[#ffcf67] to-transparent" />
+                        </div>
+
+                        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                          <div className="flex h-full flex-col rounded-[1.15rem] border border-white/12 bg-white/[0.04] p-3.5">
+                            <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/48">
+                              <CalendarDays className="h-3.5 w-3.5 text-accent" />
+                              Event Date
+                            </p>
+                            <p className="mt-2 text-sm font-semibold leading-snug text-white/92">
+                              {award.date}
+                            </p>
+                          </div>
+                          <div className="flex h-full flex-col rounded-[1.15rem] border border-white/12 bg-white/[0.04] p-3.5">
+                            <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/48">
+                              <MapPin className="h-3.5 w-3.5 text-accent" />
+                              Venue
+                            </p>
+                            <p className="mt-2 text-sm font-semibold leading-snug text-white/92">
+                              {award.location}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-auto flex items-center justify-between gap-3 pt-5">
+                          <span className="rounded-full border border-white/12 bg-white/[0.04] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/62">
+                            Upcoming Showcase
+                          </span>
+                          <Link
+                            to="/contact"
+                            className="inline-flex min-w-[11.25rem] items-center justify-center gap-2 rounded-full bg-[#ffd455] px-4 py-2.5 text-sm font-semibold uppercase tracking-[0.08em] text-[#14110d] transition-transform duration-300 hover:-translate-y-0.5 hover:bg-[#ffdf7c]"
+                          >
+                            {award.cta}
+                            <ArrowUpRight className="h-4 w-4" />
+                          </Link>
+                        </div>
+                      </div>
+                    </article>
+                  </AnimatedSection>
+                ))}
+              </div>
+            </div>
+          </section>
+
           <section ref={parallaxSectionRef} className="awards-hpg">
             <div className="awards-hpg__intro">
               <p className="awards-hpg__kicker">Shivarpan Recognition Journey</p>

@@ -1,12 +1,19 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { BadgeCheck, CalendarSync, CheckCircle2, HeartHandshake, Landmark, LoaderCircle, Repeat, ShieldCheck, Wallet } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import AnimatedSection from "@/components/AnimatedSection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  findRecentProjectByIdentifier,
+  mapRecentProjectsFromApi,
+  recentProjects,
+  type RecentProjectsApiItem,
+} from "@/data/recentProjects";
 import { useToast } from "@/hooks/use-toast";
-import { postJson } from "@/lib/api";
+import { getJson, postJson, reportApiError } from "@/lib/api";
 
 const presetAmounts = [500, 1000, 2500, 5000];
 const donationModes = ["one_time", "monthly"] as const;
@@ -59,7 +66,9 @@ const loadRazorpayScript = async () => {
 };
 
 const DonateNow = () => {
+  const location = useLocation();
   const { toast } = useToast();
+  const [apiProjects, setApiProjects] = useState<RecentProjectsApiItem[] | null>(null);
   const [donationMode, setDonationMode] = useState<DonationMode>("one_time");
   const [selectedAmount, setSelectedAmount] = useState<number>(1000);
   const [customAmount, setCustomAmount] = useState("");
@@ -76,6 +85,37 @@ const DonateNow = () => {
     }
     return selectedAmount;
   }, [customAmount, selectedAmount]);
+
+  useEffect(() => {
+    getJson<RecentProjectsApiItem[]>("projects/")
+      .then((response) => {
+        setApiProjects(response);
+      })
+      .catch((error) => {
+        reportApiError("Unable to fetch donation projects", error);
+      });
+  }, []);
+
+  const availableProjects = useMemo(
+    () => mapRecentProjectsFromApi(apiProjects),
+    [apiProjects],
+  );
+
+  const selectedProject = useMemo(() => {
+    const projectParam = new URLSearchParams(location.search).get("project")?.trim();
+    return (
+      findRecentProjectByIdentifier(availableProjects, projectParam) ??
+      findRecentProjectByIdentifier(recentProjects, projectParam)
+    );
+  }, [availableProjects, location.search]);
+  const donationMessage = useMemo(() => {
+    if (!selectedProject) {
+      return message;
+    }
+
+    const projectNote = `Supporting project: ${selectedProject.title}`;
+    return message.trim() ? `${projectNote}\n\n${message}` : projectNote;
+  }, [message, selectedProject]);
   const isCustomAmountActive = customAmount.trim() !== "";
 
   const resetForm = () => {
@@ -114,7 +154,7 @@ const DonateNow = () => {
         name,
         email,
         phone,
-        message,
+        message: donationMessage,
       });
 
       const razorpay = new window.Razorpay({
@@ -204,6 +244,14 @@ const DonateNow = () => {
               <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted-foreground md:text-base">
                 Choose an amount, share your details, and help us deliver food relief, education continuity, healthcare outreach, and environment programs.
               </p>
+              {selectedProject ? (
+                <div className="mt-5 inline-flex max-w-3xl flex-wrap items-center gap-2 rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-foreground">
+                  <span className="font-semibold text-primary">Selected project:</span>
+                  <span>{selectedProject.title}</span>
+                  <span className="text-muted-foreground">| {selectedProject.focus}</span>
+                  <span className="text-muted-foreground">| {selectedProject.location}</span>
+                </div>
+              ) : null}
             </div>
           </AnimatedSection>
         </div>
@@ -224,6 +272,23 @@ const DonateNow = () => {
                     Secure flow
                   </span>
                 </div>
+
+                {selectedProject ? (
+                  <div className="mt-6 rounded-[1.6rem] border border-primary/20 bg-[linear-gradient(145deg,hsl(var(--primary)/0.12),hsl(var(--background))_72%)] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Donating for a specific project</p>
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="font-display text-xl font-semibold text-foreground">{selectedProject.title}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {selectedProject.focus} | {selectedProject.timeline}
+                        </p>
+                      </div>
+                      <span className="rounded-full border border-primary/20 bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground">
+                        {selectedProject.status}
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
 
                 <div className="mt-6 grid gap-3 md:grid-cols-2">
                   <button
@@ -375,7 +440,11 @@ const DonateNow = () => {
                   rows={4}
                   value={message}
                   onChange={(event) => setMessage(event.target.value)}
-                  placeholder="Message (optional)"
+                  placeholder={
+                    selectedProject
+                      ? "Add a note for this project donation (optional)"
+                      : "Message (optional)"
+                  }
                   className="mt-4 bg-background/70"
                 />
 

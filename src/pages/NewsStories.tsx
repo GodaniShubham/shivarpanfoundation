@@ -1,7 +1,6 @@
   import { useLayoutEffect, useRef } from "react";
   import type { CSSProperties } from "react";
   import { useEffect, useState } from "react";
-  import axios from "axios";
   import {
     motion,
     MotionValue,
@@ -16,7 +15,7 @@
   import { ArrowUpRight, Calendar, Clock3, MapPin, Sparkles } from "lucide-react";
   import { Badge } from "@/components/ui/badge";
   import { useIsMobile } from "@/hooks/use-mobile";
-  import { apiUrl, assetUrl } from "@/lib/api";
+  import { assetUrl, getJson } from "@/lib/api";
   import aboutHero from "@/assets/about-hero.png";
   import campaignFood from "@/assets/campaign-food.jpg";
   import campaignEducation from "@/assets/campaign-education.jpg";
@@ -231,6 +230,7 @@
 
     const [flipCards, setFlipCards] = useState<FlipShowcaseCard[]>([]);
     const [heroImages, setHeroImages] = useState<any[]>([]);
+    const [storiesData, setStoriesData] = useState<Story[]>([]);
 
     const getHeroMedia = (imageIndex: number) => {
     if (!heroImages || heroImages.length === 0) {
@@ -242,35 +242,43 @@
       return heroImages[(imageIndex - 1) % heroImages.length];
     };
   useEffect(() => {
-    axios.get(apiUrl("story-items/"))
-      .then((res) => {
-        const formatted = res.data.map((item: any) => ({
-          id: item.id,
-          title: item.title,
-          category: item.category || "Story",
-          image: assetUrl(item.image),
-          alt: item.title,
-          metric: "Impact",
-          summary: item.description || "Story summary",
-          cta: "Read More",
-        }));
+    getJson<any[]>("story-items/")
+      .then((items) => {
+        const storyItems = Array.isArray(items) ? items : [];
 
-        setFlipCards(formatted);
+        setFlipCards(
+          storyItems.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            category: item.category || "Story",
+            image: assetUrl(item.image),
+            alt: item.title,
+            metric: "Impact",
+            summary: item.description || "Story summary",
+            cta: "Read More",
+          })),
+        );
+
+        setHeroImages(
+          storyItems.map((item: any) => ({
+            image: assetUrl(item.image),
+            alt: item.title || "Hero Image",
+          })),
+        );
+
+        setStoriesData(
+          storyItems.map((item: any) => ({
+            title: item.title,
+            image: assetUrl(item.image),
+            date: item.date || "Mar 2026",
+            location: item.location || "India",
+            readTime: "3 min read",
+            category: item.category || "Story",
+            excerpt: item.description || "Story description",
+          })),
+        );
       })
-      .catch((err) => console.error(err));
-  }, []);
-
-  useEffect(() => {
-    axios.get(apiUrl("story-items/"))
-      .then((res) => {
-        const formatted = res.data.map((item: any) => ({
-          image: assetUrl(item.image),
-          alt: item.title || "Hero Image",
-        }));
-
-        setHeroImages(formatted);
-      })
-      .catch((err) => console.error(err));
+      .catch(() => undefined);
   }, []);
 
     const reduceMotion = useReducedMotion();
@@ -314,25 +322,6 @@
     const flipHintOpacity = useTransform(smoothFlipProgress, [0, 0.15, 0.95, 1], [0, 0.8, 0.8, 0.24]);
     const spreadPositions = isMobile ? flipSpreadPositionsMobile : flipSpreadPositionsDesktop;
     const spreadRotations = isMobile ? flipSpreadRotationsMobile : flipSpreadRotationsDesktop;
-    const [storiesData, setStoriesData] = useState<Story[]>([]);
-    useEffect(() => {
-      
-    axios.get(apiUrl("story-items/"))
-      .then((res) => {
-        const formatted = res.data.map((item: any) => ({
-          title: item.title,
-          image: assetUrl(item.image),
-          date: item.date || "Mar 2026",
-          location: item.location || "India",
-          readTime: "3 min read",
-          category: item.category || "Story",
-          excerpt: item.description || "Story description",
-        }));
-
-        setStoriesData(formatted);
-      })
-      .catch((err) => console.error(err));
-  }, []);
 
 
     useLayoutEffect(() => {

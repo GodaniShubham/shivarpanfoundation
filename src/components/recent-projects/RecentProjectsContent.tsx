@@ -12,7 +12,6 @@ import ProjectChapters from "./ProjectChapters";
 interface RecentProjectsContentProps {
   contentRef: RefObject<HTMLDivElement | null>;
   contentTitleRef: RefObject<HTMLHeadingElement | null>;
-  introOpen: boolean;
   imageOverrides?: Record<string, string>;
   activeProjects: number;
   completedProjects: number;
@@ -27,7 +26,6 @@ interface RecentProjectsContentProps {
 const RecentProjectsContent = ({
   contentRef,
   contentTitleRef,
-  introOpen,
   imageOverrides,
   activeProjects,
   completedProjects,

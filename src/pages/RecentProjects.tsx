@@ -1,64 +1,42 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import axios from "axios";
 import { gsap } from "gsap";
-import { Flip } from "gsap/Flip";
-import RecentProjectsContent from "@/components/recent-projects/RecentProjectsContent";
 import RecentProjectsIntro from "@/components/recent-projects/RecentProjectsIntro";
-import { recentProjects } from "@/data/recentProjects";
-import { apiUrl, assetUrl } from "@/lib/api";
-
-gsap.registerPlugin(Flip);
+import RecentProjectsShowcase from "@/components/recent-projects/RecentProjectsShowcase";
+import {
+  mapRecentProjectsFromApi,
+  recentIntroGridImages,
+  type RecentProjectsApiItem,
+} from "@/data/recentProjects";
+import { getJson, reportApiError } from "@/lib/api";
 
 const introRowCount = 5;
 const introColCount = 7;
-const recentProjectsNavOffset = 80;
 
 const RecentProjects = () => {
-  const [projectImages, setProjectImages] = useState<any[]>([]);
-  const [projectImageMap, setProjectImageMap] = useState<Record<string, string>>({});
-  
-  const [introOpen, setIntroOpen] = useState(false);
-  const [isIntroTransitioning, setIsIntroTransitioning] = useState(false);
-  const [isTitleMerging, setIsTitleMerging] = useState(false);
+  const [apiProjects, setApiProjects] = useState<RecentProjectsApiItem[] | null>(null);
 
   useEffect(() => {
-    axios
-      .get(apiUrl("projects/"))
-      .then((res) => {
-        console.log("PROJECT IMAGES:", res.data);
-
-        const imageMap: Record<string, string> = {};
-        const formatted = res.data
-          .map((item: any) => {
-            const rawUrl = item?.featured_image?.url;
-            if (!rawUrl) return null;
-            const image = assetUrl(rawUrl);
-            if (item?.slug) {
-              imageMap[item.slug] = image;
-            } else if (item?.title) {
-              imageMap[item.title.trim().toLowerCase()] = image;
-            }
-            return { image };
-          })
-          .filter(Boolean) as { image: string }[];
-
-        setProjectImages(formatted);
-        setProjectImageMap(imageMap);
+    getJson<RecentProjectsApiItem[]>("projects/")
+      .then((response) => {
+        setApiProjects(response);
       })
-      .catch((err) => console.error(err));
+      .catch((error) => {
+        reportApiError("Unable to fetch recent projects", error);
+      });
   }, []);
+
+  const showcaseProjects = useMemo(
+    () => mapRecentProjectsFromApi(apiProjects),
+    [apiProjects],
+  );
 
   const introSectionRef = useRef<HTMLElement | null>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
-  const fullviewRef = useRef<HTMLDivElement | null>(null);
-  const contentRef = useRef<HTMLDivElement | null>(null);
   const introTitleRef = useRef<HTMLDivElement | null>(null);
-  const contentTitleRef = useRef<HTMLHeadingElement | null>(null);
   const rowRefs = useRef<HTMLDivElement[]>([]);
-  const middleItemInnerRef = useRef<HTMLDivElement | null>(null);
-  const middleItemImageRef = useRef<HTMLDivElement | null>(null);
-  const introTimelineRef = useRef<gsap.core.Timeline | null>(null);
-  const contentLockTopRef = useRef(0);
+  const introImagePool = showcaseProjects.length > 0
+    ? showcaseProjects.map((project) => project.image)
+    : recentIntroGridImages;
 
   const introRows = useMemo(
     () =>
@@ -66,124 +44,19 @@ const RecentProjects = () => {
         Array.from(
           { length: introColCount },
           (_, colIndex) =>
-           projectImages.length > 0
-  ? projectImages[
-      (rowIndex * introColCount + colIndex) % projectImages.length
-    ].image
-  : ""
+            introImagePool[
+              (rowIndex * introColCount + colIndex) % introImagePool.length
+            ],
         ),
       ),
-    [projectImages],
+    [introImagePool],
   );
-
-  const totalBudget = useMemo(
-    () => recentProjects.reduce((sum, project) => sum + project.budget, 0),
-    [],
-  );
-  const totalSpent = useMemo(
-    () => recentProjects.reduce((sum, project) => sum + project.spent, 0),
-    [],
-  );
-  const totalBeneficiaries = useMemo(
-    () => recentProjects.reduce((sum, project) => sum + project.beneficiaries, 0),
-    [],
-  );
-  const totalVolunteers = useMemo(
-    () => recentProjects.reduce((sum, project) => sum + project.volunteers, 0),
-    [],
-  );
-  const totalPartners = useMemo(
-    () => recentProjects.reduce((sum, project) => sum + project.partners, 0),
-    [],
-  );
-  const activeProjects = useMemo(
-    () => recentProjects.filter((project) => project.status === "Active").length,
-    [],
-  );
-  const completedProjects = recentProjects.length - activeProjects;
-  const utilization = Math.round((totalSpent / totalBudget) * 100);
-
-  useLayoutEffect(() => {
-    document.body.classList.toggle("recent-intro-lock", !introOpen);
-    return () => {
-      document.body.classList.remove("recent-intro-lock");
-    };
-  }, [introOpen]);
-
-  useLayoutEffect(() => () => {
-    introTimelineRef.current?.kill();
-  }, []);
-
-  useLayoutEffect(() => {
-    if (!introOpen) {
-      contentLockTopRef.current = 0;
-      return;
-    }
-
-    const firstSection = contentRef.current?.querySelector<HTMLElement>("section");
-    if (!firstSection) {
-      contentLockTopRef.current = 0;
-      return;
-    }
-
-    const syncContentTop = () => {
-      const nextLockTop = Math.max(
-        0,
-        firstSection.getBoundingClientRect().top + window.scrollY - recentProjectsNavOffset,
-      );
-
-      contentLockTopRef.current = nextLockTop;
-
-      if (window.scrollY < nextLockTop) {
-        window.scrollTo({
-          top: nextLockTop,
-          left: 0,
-          behavior: "auto",
-        });
-      }
-    };
-
-    const keepContentPinned = () => {
-      if (window.scrollY < contentLockTopRef.current) {
-        window.scrollTo({
-          top: contentLockTopRef.current,
-          left: 0,
-          behavior: "auto",
-        });
-      }
-    };
-
-    syncContentTop();
-    window.addEventListener("resize", syncContentTop);
-    window.addEventListener("scroll", keepContentPinned, { passive: true });
-
-    return () => {
-      window.removeEventListener("resize", syncContentTop);
-      window.removeEventListener("scroll", keepContentPinned);
-    };
-  }, [introOpen]);
 
   useLayoutEffect(() => {
     const rows = rowRefs.current.filter(Boolean);
     if (!rows.length) {
       return;
     }
-
-    const middleRow = rows[Math.floor(rows.length / 2)];
-    const middleRowItems = middleRow
-      ? Array.from(middleRow.querySelectorAll<HTMLElement>(".recent-intro-row__item"))
-      : [];
-    const middleItem = middleRowItems[Math.floor(middleRowItems.length / 2)] ?? null;
-    const middleInner =
-      middleItem?.querySelector<HTMLDivElement>(".recent-intro-row__item-inner") ??
-      null;
-    const middleImage =
-      middleInner?.querySelector<HTMLDivElement>(".recent-intro-row__item-img") ??
-      null;
-
-    middleItemInnerRef.current = middleInner;
-    middleItemImageRef.current = middleImage;
-    middleImage?.classList.add("recent-intro-row__item-img--large");
 
     const winsize = { width: window.innerWidth, height: window.innerHeight };
     const mousepos = { x: winsize.width / 2, y: winsize.height / 2 };
@@ -257,9 +130,7 @@ const RecentProjects = () => {
 
     let rafId = 0;
 
-    if (!introOpen && !isIntroTransitioning) {
-      rafId = window.requestAnimationFrame(render);
-    }
+    rafId = window.requestAnimationFrame(render);
 
     window.addEventListener("resize", handleResize);
     window.addEventListener("mousemove", handleMouseMove);
@@ -273,161 +144,18 @@ const RecentProjects = () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("touchmove", handleTouchMove);
     };
-  }, [introOpen, isIntroTransitioning]);
-
-  const enterFullview = () => {
-    if (introOpen || isIntroTransitioning) {
-      return;
-    }
-
-    const middleInner = middleItemInnerRef.current;
-    const middleImage = middleItemImageRef.current;
-    const fullview = fullviewRef.current;
-    const grid = gridRef.current;
-    const content = contentRef.current;
-    const introTitle = introTitleRef.current;
-    const contentTitle = contentTitleRef.current;
-    const introSection = introSectionRef.current;
-
-    if (!middleInner || !middleImage || !fullview || !grid || !content || !introTitle || !contentTitle || !introSection) {
-      setIntroOpen(true);
-      return;
-    }
-
-    setIsIntroTransitioning(true);
-    setIsTitleMerging(true);
-
-    const flipState = Flip.getState(middleInner);
-    fullview.appendChild(middleInner);
-
-    introTimelineRef.current?.kill();
-
-    gsap.set(fullview, { autoAlpha: 1 });
-    gsap.set(content, { y: 110, autoAlpha: 0, filter: "blur(14px)" });
-    gsap.set(contentTitle, { y: 64, opacity: 0, scale: 0.95, transformOrigin: "50% 100%" });
-    gsap.set(introSection, { clipPath: "inset(0% 0% 0% 0%)" });
-    gsap.set(grid, { opacity: 1, scale: 1, filter: "blur(0px)" });
-    gsap.set(introTitle, { y: 0, scale: 1, opacity: 1, filter: "blur(0px)" });
-    gsap.set(middleImage, { scale: 1, filter: "brightness(100%)", y: 0 });
-
-    introTimelineRef.current = gsap
-      .timeline({
-        defaults: { ease: "power4.inOut" },
-        onComplete: () => {
-          gsap.set(content, { clearProps: "transform,opacity,visibility,filter" });
-          gsap.set(contentTitle, { clearProps: "transform,opacity" });
-          gsap.set(introSection, { clearProps: "clipPath,opacity,visibility" });
-          gsap.set(grid, { clearProps: "transform,opacity,filter" });
-          gsap.set(introTitle, { clearProps: "transform,opacity,filter" });
-          gsap.set(fullview, { clearProps: "opacity,visibility" });
-          setIntroOpen(true);
-          setIsIntroTransitioning(false);
-          setIsTitleMerging(false);
-        },
-      })
-      .add(
-        Flip.from(flipState, {
-          duration: 1,
-          ease: "power4.inOut",
-          absolute: true,
-          simple: true,
-        }),
-        0,
-      )
-      .to(
-        grid,
-        {
-          duration: 0.9,
-          opacity: 0,
-          scale: 0.96,
-          filter: "blur(10px)",
-        },
-        0,
-      )
-      .to(
-        introTitle,
-        {
-          y: "-14vh",
-          scale: 0.74,
-          opacity: 0,
-          filter: "blur(10px)",
-          duration: 0.82,
-        },
-        0.04,
-      )
-      .to(
-        middleImage,
-        {
-          scale: 1.12,
-          filter: "brightness(58%)",
-          y: "-4vh",
-          duration: 1,
-          ease: "power3.out",
-        },
-        0.08,
-      )
-      .to(
-        introSection,
-        {
-          clipPath: "inset(0% 0% 100% 0%)",
-          autoAlpha: 0,
-          duration: 0.95,
-        },
-        0.18,
-      )
-      .to(
-        content,
-        {
-          y: 0,
-          autoAlpha: 1,
-          filter: "blur(0px)",
-          duration: 0.88,
-          ease: "power3.out",
-        },
-        0.28,
-      )
-      .to(
-        contentTitle,
-        {
-          y: 0,
-          opacity: 1,
-          scale: 1,
-          duration: 0.86,
-          ease: "power3.out",
-        },
-        0.42,
-      );
-  };
+  }, [introRows]);
 
   return (
     <div className="relative overflow-hidden bg-background recent-projects-page">
       <RecentProjectsIntro
-        introOpen={introOpen}
-        isIntroTransitioning={isIntroTransitioning}
-        isTitleMerging={isTitleMerging}
         introRows={introRows}
         introSectionRef={introSectionRef}
         introTitleRef={introTitleRef}
         gridRef={gridRef}
-        fullviewRef={fullviewRef}
         rowRefs={rowRefs}
-        onEnter={enterFullview}
       />
-
-      <RecentProjectsContent
-        contentRef={contentRef}
-        contentTitleRef={contentTitleRef}
-        introOpen={introOpen}
-        imageOverrides={projectImageMap}
-        activeProjects={activeProjects}
-        completedProjects={completedProjects}
-        totalBeneficiaries={totalBeneficiaries}
-        totalVolunteers={totalVolunteers}
-        totalPartners={totalPartners}
-        totalSpent={totalSpent}
-        totalBudget={totalBudget}
-        utilization={utilization}
-      />
+      <RecentProjectsShowcase projects={showcaseProjects} />
     </div>
   );
 };

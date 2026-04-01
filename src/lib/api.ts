@@ -1,4 +1,6 @@
 type JsonRecord = Record<string, unknown>;
+const API_UNAVAILABLE_COOLDOWN_MS = 30000;
+let apiUnavailableUntil = 0;
 
 const deriveFallbackBaseUrl = () => {
   if (typeof window === "undefined") {
@@ -41,6 +43,40 @@ export const assetUrl = (path?: string | null) => {
   return `${API_ORIGIN}/${path.replace(/^\/+/, "")}`;
 };
 
+const createApiUnavailableError = () => {
+  const error = new Error("API temporarily unavailable");
+  error.name = "ApiUnavailableError";
+  return error;
+};
+
+const shouldSkipRequest = () =>
+  typeof window !== "undefined" && Date.now() < apiUnavailableUntil;
+
+const markApiUnavailable = () => {
+  apiUnavailableUntil = Date.now() + API_UNAVAILABLE_COOLDOWN_MS;
+};
+
+const clearApiUnavailable = () => {
+  apiUnavailableUntil = 0;
+};
+
+export const isApiUnavailableError = (error: unknown) =>
+  error instanceof Error && error.name === "ApiUnavailableError";
+
+const isNetworkError = (error: unknown) =>
+  error instanceof TypeError ||
+  (error instanceof Error &&
+    (error.message === "Failed to fetch" ||
+      ("code" in error && error.code === "ERR_NETWORK")));
+
+export const reportApiError = (label: string, error: unknown) => {
+  if (isApiUnavailableError(error) || isNetworkError(error)) {
+    return;
+  }
+
+  console.error(label, error);
+};
+
 function extractErrorMessage(data: unknown): string {
   if (Array.isArray(data) && data.length > 0) {
     return data
@@ -74,11 +110,25 @@ export async function postJson<TResponse = JsonRecord>(
   path: string,
   payload: JsonRecord
 ): Promise<TResponse> {
-  const response = await fetch(apiUrl(path), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  if (shouldSkipRequest()) {
+    throw createApiUnavailableError();
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(apiUrl(path), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    clearApiUnavailable();
+  } catch (error) {
+    if (isNetworkError(error)) {
+      markApiUnavailable();
+      throw createApiUnavailableError();
+    }
+    throw error;
+  }
 
   let data: TResponse | JsonRecord | null = null;
   try {
@@ -95,16 +145,35 @@ export async function postJson<TResponse = JsonRecord>(
 }
 
 export async function getJson<TResponse = JsonRecord>(path: string): Promise<TResponse> {
-  const response = await fetch(apiUrl(path), {
-    method: "GET",
-    headers: { "Accept": "application/json" },
-  });
+  if (shouldSkipRequest()) {
+    throw createApiUnavailableError();
+  }
 
-  const data = (await response.json()) as TResponse;
+  let response: Response;
+  try {
+    response = await fetch(apiUrl(path), {
+      method: "GET",
+      headers: { "Accept": "application/json" },
+    });
+    clearApiUnavailable();
+  } catch (error) {
+    if (isNetworkError(error)) {
+      markApiUnavailable();
+      throw createApiUnavailableError();
+    }
+    throw error;
+  }
+
+  let data: TResponse | JsonRecord | null = null;
+  try {
+    data = (await response.json()) as TResponse;
+  } catch {
+    data = null;
+  }
 
   if (!response.ok) {
     throw new Error(extractErrorMessage(data));
   }
 
-  return data;
+  return data as TResponse;
 }

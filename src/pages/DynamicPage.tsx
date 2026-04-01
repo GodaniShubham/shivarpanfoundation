@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import AnimatedSection from "@/components/AnimatedSection";
 import PageHero from "@/components/PageHero";
 import NotFound from "@/pages/NotFound";
-import { getJson } from "@/lib/api";
+import { getJson, reportApiError } from "@/lib/api";
 
 type MediaAsset = {
   id: number;
@@ -71,7 +71,7 @@ const DynamicPage = ({ slug: forcedSlug, fallback }: DynamicPageProps) => {
           setPage(data);
         }
       } catch (error) {
-        console.error("Page fetch failed", error);
+        reportApiError("Page fetch failed", error);
         if (isMounted) {
           setIsNotFound(true);
         }

@@ -29,7 +29,7 @@ const AnimatedSection = ({
     viewport={{ once, amount, margin: "-60px" }}
     transition={createRevealTransition(delay)}
     variants={revealVariants[direction]}
-    className={className}
+    className={`relative ${className}`.trim()}
   >
     {children}
   </motion.div>

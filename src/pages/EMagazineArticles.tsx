@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { getJson } from "@/lib/api";
+import { getJson, reportApiError } from "@/lib/api";
 import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -51,7 +51,7 @@ const EMagazineArticles = () => {
           setError(null);
         }
       } catch (fetchError) {
-        console.error(fetchError);
+        reportApiError("Magazine stories fetch failed", fetchError);
         if (isMounted) {
           setError("Unable to load magazine stories. Please try again.");
           setStories([]);
