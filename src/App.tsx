@@ -9,6 +9,7 @@ import Footer from "./components/Footer";
 import FloatingWhatsAppButton from "./components/FloatingWhatsAppButton";
 import LoadingScreen from "./components/LoadingScreen";
 import UpcomingEventPopup from "./components/UpcomingEventPopup";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Index from "./pages/Index";
 import DynamicPage from "./pages/DynamicPage";
 import About from "./pages/About";
@@ -30,7 +31,22 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import AdminPanel from "./pages/AdminPanel";
 
-const queryClient = new QueryClient();
+// Optimized QueryClient with better defaults
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (was cacheTime)
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -46,28 +62,30 @@ const AppRoutes = () => {
     <>
       {!isMagazineViewer && <Navbar />}
       <main className={isMagazineViewer ? "pt-0" : "pt-20"}>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<DynamicPage slug="about" fallback={<About />} />} />
-          <Route path="/gallery" element={<DynamicPage slug="gallery" fallback={<Gallery />} />} />
-          <Route path="/news-stories" element={<DynamicPage slug="news-stories" fallback={<NewsStories />} />} />
-          <Route path="/recent-projects" element={<DynamicPage slug="recent-projects" fallback={<RecentProjects />} />} />
-          <Route path="/awards" element={<Awards />} />
-          <Route path="/podcast" element={<DynamicPage slug="podcast" fallback={<Podcast />} />} />
-          <Route path="/podcast/:episodeSlug" element={<PodcastEpisode />} />
-          <Route path="/contact" element={<DynamicPage slug="contact" fallback={<Contact />} />} />
-          <Route path="/donate-now" element={<DonateNow />} />
-          <Route path="/upcoming-events" element={<DynamicPage slug="upcoming-events" fallback={<UpcomingEvents />} />} />
-          <Route path="/privacy-policy" element={<DynamicPage slug="privacy-policy" fallback={<PrivacyPolicy />} />} />
-          <Route path="/terms-and-conditions" element={<DynamicPage slug="terms-and-conditions" fallback={<TermsAndConditions />} />} />
-          <Route path="/board-of-trustees" element={<BoardOfTrustees />} />
-          <Route path="/team-members" element={<TeamMembers />} />
-          <Route path="/e-magazine-articles" element={<DynamicPage slug="e-magazine-articles" fallback={<EMagazineArticles />} />} />
-          <Route path="/e-magazine-articles/:magazineId" element={<MagazineViewer />} />
-          <Route path="/admin-panel" element={<AdminPanel />} />
-          <Route path="/:slug" element={<DynamicPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<DynamicPage slug="about" fallback={<About />} />} />
+            <Route path="/gallery" element={<DynamicPage slug="gallery" fallback={<Gallery />} />} />
+            <Route path="/news-stories" element={<DynamicPage slug="news-stories" fallback={<NewsStories />} />} />
+            <Route path="/recent-projects" element={<DynamicPage slug="recent-projects" fallback={<RecentProjects />} />} />
+            <Route path="/awards" element={<Awards />} />
+            <Route path="/podcast" element={<DynamicPage slug="podcast" fallback={<Podcast />} />} />
+            <Route path="/podcast/:episodeSlug" element={<PodcastEpisode />} />
+            <Route path="/contact" element={<DynamicPage slug="contact" fallback={<Contact />} />} />
+            <Route path="/donate-now" element={<DonateNow />} />
+            <Route path="/upcoming-events" element={<DynamicPage slug="upcoming-events" fallback={<UpcomingEvents />} />} />
+            <Route path="/privacy-policy" element={<DynamicPage slug="privacy-policy" fallback={<PrivacyPolicy />} />} />
+            <Route path="/terms-and-conditions" element={<DynamicPage slug="terms-and-conditions" fallback={<TermsAndConditions />} />} />
+            <Route path="/board-of-trustees" element={<BoardOfTrustees />} />
+            <Route path="/team-members" element={<TeamMembers />} />
+            <Route path="/e-magazine-articles" element={<DynamicPage slug="e-magazine-articles" fallback={<EMagazineArticles />} />} />
+            <Route path="/e-magazine-articles/:magazineId" element={<MagazineViewer />} />
+            <Route path="/admin-panel" element={<AdminPanel />} />
+            <Route path="/:slug" element={<DynamicPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </ErrorBoundary>
       </main>
       {shouldShowFloatingWhatsApp && <FloatingWhatsAppButton />}
       {!isMagazineViewer && <Footer />}
@@ -79,25 +97,27 @@ const App = () => {
   const [showLoader, setShowLoader] = useState(true);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        {showLoader ? (
-          <LoadingScreen onComplete={() => setShowLoader(false)} />
-        ) : (
-          <HashRouter
-            future={{
-              v7_startTransition: true,
-              v7_relativeSplatPath: true,
-            }}
-          >
-            <UpcomingEventPopup />
-            <AppRoutes />
-          </HashRouter>
-        )}
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          {showLoader ? (
+            <LoadingScreen onComplete={() => setShowLoader(false)} />
+          ) : (
+            <HashRouter
+              future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true,
+              }}
+            >
+              <UpcomingEventPopup />
+              <AppRoutes />
+            </HashRouter>
+          )}
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 

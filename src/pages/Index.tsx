@@ -332,7 +332,7 @@ const Index = () => {
 
     const loadHomepage = async () => {
       try {
-        const data = await getJson<HomepagePayload>("homepage/");
+        const data = await getJson<HomepagePayload>("homepage/", { cache: true, cacheTTL: 10 * 60 * 1000 }); // 10 minutes cache
         if (isMounted) {
           setHomepage(data);
         }
@@ -343,7 +343,7 @@ const Index = () => {
 
     const loadTestimonials = async () => {
       try {
-        const data = await getJson<TestimonialPayload[]>("testimonials/");
+        const data = await getJson<TestimonialPayload[]>("testimonials/", { cache: true, cacheTTL: 15 * 60 * 1000 }); // 15 minutes cache
         if (isMounted) {
           setTestimonialItems(data);
         }
@@ -354,7 +354,7 @@ const Index = () => {
 
     const loadGallery = async () => {
       try {
-        const data = await getJson<GalleryItemPayload[]>("gallery/");
+        const data = await getJson<GalleryItemPayload[]>("gallery/", { cache: true, cacheTTL: 20 * 60 * 1000 }); // 20 minutes cache
         if (isMounted) {
           setGalleryItems(
             data.map((item) => ({
@@ -370,7 +370,7 @@ const Index = () => {
 
     const loadStoryItems = async () => {
       try {
-        const data = await getJson<StoryItemPayload[]>("story-items/");
+        const data = await getJson<StoryItemPayload[]>("story-items/", { cache: true, cacheTTL: 15 * 60 * 1000 }); // 15 minutes cache
         if (isMounted) {
           setStoryItems(
             data.map((item) => ({
@@ -386,7 +386,7 @@ const Index = () => {
 
     const loadProjects = async () => {
       try {
-        const data = await getJson<ProjectPayload[]>("projects/");
+        const data = await getJson<ProjectPayload[]>("projects/", { cache: true, cacheTTL: 10 * 60 * 1000 }); // 10 minutes cache
         if (isMounted) {
           setProjectItems(data);
         }
@@ -395,11 +395,16 @@ const Index = () => {
       }
     };
 
-    loadHomepage();
-    loadTestimonials();
-    loadGallery();
-    loadStoryItems();
-    loadProjects();
+    // Load data in parallel for better performance
+    Promise.all([
+      loadHomepage(),
+      loadTestimonials(),
+      loadGallery(),
+      loadStoryItems(),
+      loadProjects(),
+    ]).catch((error) => {
+      console.error("Error loading initial data:", error);
+    });
 
     return () => {
       isMounted = false;
@@ -481,7 +486,7 @@ const Index = () => {
 
     return projects.map((project, index) => {
       const match = mapByTitle.get(normalizeKey(project.title)) || projectItems[index];
-      const image = normalizeUrl(match?.featured_image?.url) || project.image;
+      const image = assetUrl(match?.featured_image?.url) || project.image;
       return { ...project, image };
     });
   }, [projectItems]);
